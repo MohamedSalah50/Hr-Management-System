@@ -24,8 +24,9 @@ export class OfficialHoliday implements IOfficialHoliday {
 
 export type OfficialHolidayDocument = HydratedDocument<OfficialHoliday>;
 
-export const OfficialHolidaySchema =
-  SchemaFactory.createForClass(OfficialHoliday);
+export const OfficialHolidaySchema = SchemaFactory.createForClass(OfficialHoliday);
+
+OfficialHolidaySchema.index({ year: 1, date: 1 });
 
 export const OfficialHolidayModel = MongooseModule.forFeature([
   {

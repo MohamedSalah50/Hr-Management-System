@@ -11,6 +11,9 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RoleModule } from './modules/role/role.module';
 import { CommonModule } from './common';
 import { DepartmentModule } from './modules/department/department.module';
+import { EmployeeModule } from './modules/employee/employee.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { OfficialHolidaysModule } from './modules/official-holidays/official-holidays.module';
 
 @Module({
   imports: [
@@ -32,6 +35,9 @@ import { DepartmentModule } from './modules/department/department.module';
     PermissionsModule,
     RoleModule,
     DepartmentModule,
+    EmployeeModule,
+    SettingsModule,
+    OfficialHolidaysModule,
     CommonModule
   ],
   controllers: [AppController],

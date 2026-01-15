@@ -30,6 +30,8 @@ export type SettingDocument = HydratedDocument<Setting>;
 
 export const SettingSchema = SchemaFactory.createForClass(Setting);
 
+SettingSchema.index({ key: 1 });
+
 export const SettingModel = MongooseModule.forFeature([
   {
     name: Setting.name,

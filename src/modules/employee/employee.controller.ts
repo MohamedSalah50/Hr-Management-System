@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { Types } from 'mongoose';
 
 @Controller('employee')
 export class EmployeeController {
@@ -13,22 +14,39 @@ export class EmployeeController {
   }
 
   @Get()
-  findAll() {
+  findAll(
+    @Query('search') search?: string,
+    @Query('departmentId') departmentId?: string,
+  ) {
+    if (search) {
+      return this.employeeService.search(search);
+    }
+    if (departmentId) {
+      return this.employeeService.getByDepartment(departmentId);
+    }
     return this.employeeService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.employeeService.findOne(+id);
+    return this.employeeService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEmployeeDto: UpdateEmployeeDto) {
-    return this.employeeService.update(+id, updateEmployeeDto);
+  update(
+    @Param('id') id: Types.ObjectId,
+    @Body() updateEmployeeDto: UpdateEmployeeDto,
+  ) {
+    return this.employeeService.update(id, updateEmployeeDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.employeeService.remove(+id);
+  remove(@Param('id') id: Types.ObjectId) {
+    return this.employeeService.remove(id);
+  }
+
+  @Patch(':id/toggle-status')
+  toggleStatus(@Param('id') id: Types.ObjectId) {
+    return this.employeeService.toggleStatus(id);
   }
 }
