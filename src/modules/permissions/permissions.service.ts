@@ -6,11 +6,11 @@ import {
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { PermissionRepository } from 'src/db';
-import { Types } from 'mongoose';
+import { isValidObjectId, Types } from 'mongoose';
 
 @Injectable()
 export class PermissionsService {
-  constructor(private readonly permissionRepository: PermissionRepository) {}
+  constructor(private readonly permissionRepository: PermissionRepository) { }
 
   async create(createPermissionDto: CreatePermissionDto) {
     // Check if permission already exists
@@ -41,7 +41,13 @@ export class PermissionsService {
   }
 
   async findOne(id: Types.ObjectId) {
-    const permission = await this.permissionRepository.findById({ id });
+
+    if (!isValidObjectId(id)) {
+      throw new NotFoundException('id غير صالح');
+    }
+    // const permission = await this.permissionRepository.findOne({ filter: { _id: new Types.ObjectId(id) } });
+    const permission = await this.permissionRepository.findOne({ filter: { _id: id } });
+
 
     if (!permission) {
       throw new NotFoundException('الصلاحية غير موجودة');
@@ -50,7 +56,12 @@ export class PermissionsService {
     return { data: permission };
   }
 
-  async update(id: string, updatePermissionDto: UpdatePermissionDto) {
+  async update(id: Types.ObjectId, updatePermissionDto: UpdatePermissionDto) {
+
+    if (!isValidObjectId(id)) {
+      throw new NotFoundException('id غير صالح');
+    }
+
     const permission = await this.permissionRepository.findOneAndUpdate({
       filter: { _id: id },
       update: updatePermissionDto,
@@ -66,7 +77,12 @@ export class PermissionsService {
     };
   }
 
-  async remove(id: string) {
+  async remove(id: Types.ObjectId) {
+
+    if (!isValidObjectId(id)) {
+      throw new NotFoundException('id غير صالح');
+    }
+
     const permission = await this.permissionRepository.findOneAndDelete({
       filter: { _id: id },
     });

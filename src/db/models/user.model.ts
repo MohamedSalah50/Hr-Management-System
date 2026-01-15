@@ -1,7 +1,7 @@
 import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { IUser, RoleEnum } from 'src/common';
-import {  generateHash } from 'src/utils';
+import { generateHash } from 'src/utils';
 
 export type UserDocument = HydratedDocument<User> & {
   actualMobileNumber?: string | null;
@@ -13,7 +13,7 @@ export type UserDocument = HydratedDocument<User> & {
   toObject: { virtuals: true },
 })
 export class User implements IUser {
-  @Prop({ required: true, minlength: 10, maxlength: 50 })
+  @Prop({ required: true, minlength: 7, maxlength: 50 })
   fullName: string;
 
   @Prop({ required: true, unique: true, minlength: 7, maxlength: 20 })
@@ -31,14 +31,17 @@ export class User implements IUser {
   @Prop({ default: true })
   isActive: boolean;
 
-  @Prop({ enum: RoleEnum, default: RoleEnum.user })
-  role: RoleEnum;
-
   @Prop({ type: Date })
   changeCredentialTime: Date;
+
+  @Prop({ enum: RoleEnum, default: RoleEnum.user })
+  role?: RoleEnum;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.index({ email: 1 });
+UserSchema.index({ username: 1 })
 
 UserSchema.pre('save', async function (next) {
   if (this.isModified('password')) {

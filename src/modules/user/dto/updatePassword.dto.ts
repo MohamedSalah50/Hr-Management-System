@@ -1,13 +1,13 @@
-import { IsString, IsStrongPassword, MinLength } from "class-validator"
+import { IsNotEmpty, IsString, MinLength } from "class-validator"
 
 
-export class UpdatePasswordDto {
+export class ChangePasswordDto {
     @IsString()
-    @MinLength(6)
-    @IsStrongPassword()
-    oldPassword: string
+    @IsNotEmpty({ message: 'من فضلك ادخل كلمة المرور القديمة' })
+    oldPassword: string;
+
     @IsString()
-    @MinLength(6)
-    @IsStrongPassword()
-    newPassword: string
+    @IsNotEmpty({ message: 'من فضلك ادخل كلمة المرور الجديدة' })
+    @MinLength(6, { message: 'كلمة المرور يجب ألا تقل عن 6 أحرف' })
+    newPassword: string;
 }

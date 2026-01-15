@@ -8,6 +8,6 @@ export interface IUser {
   password: string;
   roleId: Types.ObjectId;
   isActive: boolean;
-  role: RoleEnum;
-  changeCredentialTime: Date;
+  changeCredentialTime?: Date;
+  role?: RoleEnum;
 }

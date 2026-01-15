@@ -1,6 +1,6 @@
 import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { IEmployee } from 'src/common';
+import { GenderEnum, IEmployee } from 'src/common';
 
 @Schema({
   timestamps: true,
@@ -24,8 +24,8 @@ export class Employee implements IEmployee {
   @Prop({ required: true, type: Date })
   birthDate: Date;
 
-  @Prop({ required: true, enum: ['male', 'female'] })
-  gender: string;
+  @Prop({ required: true, enum: GenderEnum, default: GenderEnum.male })
+  gender: GenderEnum;
 
   @Prop({ required: true })
   nationality: string;
@@ -52,6 +52,9 @@ export class Employee implements IEmployee {
 export type EmployeeDocument = HydratedDocument<Employee>;
 
 export const EmployeeSchema = SchemaFactory.createForClass(Employee);
+
+EmployeeSchema.index({ nationalId: 1 });
+EmployeeSchema.index({ departmentId: 1 });
 
 export const EmployeeModel = MongooseModule.forFeature([
   {

@@ -14,7 +14,7 @@ export class RoleService {
   constructor(
     private readonly roleRepository: RoleRepository,
     private readonly permissionRepository: PermissionRepository,
-  ) {}
+  ) { }
   async create(createRoleDto: CreateRoleDto) {
     // Validation Rule #3: اسم المجموعة مطلوب
     if (!createRoleDto.name || createRoleDto.name.trim() === '') {

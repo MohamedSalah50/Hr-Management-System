@@ -28,14 +28,14 @@ export class PermissionsController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id') id: Types.ObjectId,
     @Body() updatePermissionDto: UpdatePermissionDto,
   ) {
     return this.permissionsService.update(id, updatePermissionDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: Types.ObjectId) {
     return this.permissionsService.remove(id);
   }
 }

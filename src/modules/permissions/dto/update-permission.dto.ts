@@ -1,4 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreatePermissionDto } from './create-permission.dto';
+import { containField } from 'src/common';
 
-export class UpdatePermissionDto extends PartialType(CreatePermissionDto) {}
+
+@containField()
+export class UpdatePermissionDto extends PartialType(CreatePermissionDto) { }

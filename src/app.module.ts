@@ -10,6 +10,7 @@ import { SharedAutnenticationModule } from './common/modules/autnentication.modu
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RoleModule } from './modules/role/role.module';
 import { CommonModule } from './common';
+import { DepartmentModule } from './modules/department/department.module';
 
 @Module({
   imports: [
@@ -30,9 +31,10 @@ import { CommonModule } from './common';
     UserModule,
     PermissionsModule,
     RoleModule,
+    DepartmentModule,
     CommonModule
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

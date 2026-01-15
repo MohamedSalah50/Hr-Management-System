@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsMongoId,
 } from 'class-validator';
-import { Types } from 'mongoose';
 
 export class CreateRoleDto {
   @IsString()

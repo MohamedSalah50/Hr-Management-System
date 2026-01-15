@@ -8,7 +8,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { genderEnum, IsAdult, IsMatched, IUser } from 'src/common';
+import { GenderEnum, IsAdult, IsMatched, IUser } from 'src/common';
 
 export class signupDto implements Partial<IUser> {
   @IsString()
@@ -44,7 +44,7 @@ export class signupDto implements Partial<IUser> {
 
   @IsString()
   @IsOptional()
-  gender?: genderEnum;
+  gender?: GenderEnum;
 
   //   @IsDateString({}, { message: 'DOB must be in format YYYY-MM-DD' })
   //   @IsAdult({ message: 'age must be greater than 18' })

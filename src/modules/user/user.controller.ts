@@ -1,101 +1,88 @@
-import {
-  Controller,
-  Get,
-  Body,
-  Patch,
-  Param,
-  Req,
-  ValidationPipe,
-  UploadedFile,
-  BadRequestException,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UpdateUserDto } from './dto/update-user.dto';
-import {
-  CloudinaryService,
-  RoleEnum,
-  UploadFile,
-  type IAuthRequest,
-} from 'src/common';
-
+import { CloudinaryService, type IAuthRequest, RoleEnum } from 'src/common';
 import { auth } from 'src/common/decorators/auth.decorator';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { Types } from 'mongoose';
-import { UpdatePasswordDto } from './dto/updatePassword.dto';
+import { ChangePasswordDto } from './dto/updatePassword.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 
+
+@auth([RoleEnum.admin])
 @Controller('user')
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
-  // @auth([RoleEnum.user, RoleEnum.admin])
-  // @Get('/profile')
-  // profile(@Req() req: IAuthRequest): { message: string } {
-  //   return { message: 'done' };
-  // }
 
-  // @auth([RoleEnum.admin, RoleEnum.user])
-  // @Patch('/update-basic-profile')
-  // async updateBasicProfile(
-  //   @Body(
-  //     new ValidationPipe({
-  //       whitelist: true,
-  //       forbidNonWhitelisted: true,
-  //       stopAtFirstError: true,
-  //     }),
-  //   )
-  //   dto: UpdateUserDto,
-  //   @Req() req: IAuthRequest,
-  // ): Promise<{ message: string }> {
-  //   await this.userService.updateBasicProfile(dto, req);
-  //   return { message: 'done' };
-  // }
+  @Post()
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.userService.create(createUserDto);
+  }
 
-  // @auth([RoleEnum.admin, RoleEnum.user])
-  // @Get('/get-login-user-account-data')
-  // async getLoginUserAccountData(@Req() req: IAuthRequest) {
-  //   const user = await this.userService.getLoginUserAccountData(req);
-  //   return user;
-  // }
+  /**
+   * GET /users - عرض كل المستخدمين
+   * GET /users?search=ahmed - البحث عن مستخدمين
+   * GET /users?roleId=xxx - عرض مستخدمين بمجموعة معينة
+   */
+  @Get()
+  findAll(@Query('search') search?: string, @Query('roleId') roleId?: string) {
+    if (search) {
+      return this.userService.search(search);
+    }
+    if (roleId) {
+      return this.userService.getUsersByRole(roleId);
+    }
+    return this.userService.findAll();
+  }
 
-  // @auth([RoleEnum.admin, RoleEnum.user])
-  // @Get('/profile/:userId')
-  // async getAnotherUserProfile(
-  //   @Req() req: IAuthRequest,
-  //   @Param('userId') userId: Types.ObjectId,
-  // ) {
-  //   const anotherProfile = await this.userService.getAnotherUserProfile(
-  //     req,
-  //     userId,
-  //   );
-  //   return anotherProfile;
-  // }
+  /**
+   * GET /users/:id - عرض مستخدم واحد
+   */
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.userService.findOne(id);
+  }
 
-  // @auth([RoleEnum.user, RoleEnum.admin])
-  // @Patch('/update-password')
-  // async updatePassword(
-  //   @Body(
-  //     new ValidationPipe({
-  //       whitelist: true,
-  //       forbidNonWhitelisted: true,
-  //       stopAtFirstError: true,
-  //     }),
-  //   )
-  //   dto: UpdatePasswordDto,
-  //   @Req() req: IAuthRequest,
-  // ): Promise<{ message: string }> {
-  //   await this.userService.updatePassword(req, dto);
-  //   return { message: 'password updated, please login again' };
-  // }
+  /**
+   * PATCH /users/:id - تعديل بيانات المستخدم
+   */
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(id, updateUserDto);
+  }
 
-  // @auth([RoleEnum.user, RoleEnum.admin])
-  // @Patch('freeze-account')
-  // async freeze(
-  //   @Req() req: IAuthRequest,
-  //   @Body('userId') userId?: Types.ObjectId,
-  // ): Promise<{ message: string }> {
-  //   await this.userService.freeze(req, userId);
-  //   return { message: 'user archived successfully' };
-  // }
+  /**
+   * DELETE /users/:id - حذف مستخدم
+   */
+  @Delete(':id')
+  remove(@Param('id') id: Types.ObjectId) {
+    return this.userService.remove(id);
+  }
+
+  /**
+   * PATCH /users/:id/toggle-status - تفعيل/إلغاء تفعيل المستخدم
+   */
+  @Patch(':id/toggle-status')
+  toggleStatus(@Param('id') id: string) {
+    return this.userService.toggleStatus(id);
+  }
+
+  /**
+   * POST /users/change-password - تغيير كلمة المرور
+   */
+  @Post('change-password')
+  changePassword(
+    @Req() req: IAuthRequest,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.userService.changePassword(
+      req.user._id,
+      changePasswordDto,
+    );
+  }
+
+
 }
