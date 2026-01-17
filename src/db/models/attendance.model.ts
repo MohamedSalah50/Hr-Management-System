@@ -43,6 +43,7 @@ export type AttendanceDocument = HydratedDocument<Attendance>;
 export const AttendanceSchema = SchemaFactory.createForClass(Attendance);
 
 AttendanceSchema.index({ employeeId: 1, date: 1 }, { unique: true });
+AttendanceSchema.index({ date: 1 });
 
 export const AttendanceModel = MongooseModule.forFeature([
   {
