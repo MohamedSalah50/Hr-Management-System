@@ -7,11 +7,14 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { Types } from 'mongoose';
+import { auth } from 'src/common/decorators/auth.decorator';
+import { RoleEnum } from 'src/common';
 
+@auth([RoleEnum.admin])
 @Controller('role')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}

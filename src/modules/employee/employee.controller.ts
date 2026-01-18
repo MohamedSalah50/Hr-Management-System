@@ -3,7 +3,10 @@ import { EmployeeService } from './employee.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Types } from 'mongoose';
+import { auth } from 'src/common/decorators/auth.decorator';
+import { RoleEnum } from 'src/common';
 
+@auth([RoleEnum.admin])
 @Controller('employee')
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}

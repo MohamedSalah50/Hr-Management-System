@@ -1,11 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { OfficialHolidaysService } from './official-holidays.service';
 import { CreateOfficialHolidayDto } from './dto/create-official-holiday.dto';
 import { UpdateOfficialHolidayDto } from './dto/update-official-holiday.dto';
+import { RoleEnum } from 'src/common';
+import { auth } from 'src/common/decorators/auth.decorator';
 
+@auth([RoleEnum.admin])
 @Controller('official-holidays')
 export class OfficialHolidaysController {
-  constructor(private readonly officialHolidaysService: OfficialHolidaysService) { }
+  constructor(
+    private readonly officialHolidaysService: OfficialHolidaysService,
+  ) {}
 
   @Post()
   create(@Body() createOfficialHolidayDto: CreateOfficialHolidayDto) {
@@ -35,5 +49,4 @@ export class OfficialHolidaysController {
   remove(@Param('id') id: string) {
     return this.officialHolidaysService.remove(id);
   }
-
 }

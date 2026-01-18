@@ -1,12 +1,23 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+} from '@nestjs/common';
 import { SettingsService } from './settings.service';
 import { CreateSettingDto } from './dto/create-setting.dto';
 import { OvertimeDeductionSettingsDto } from './dto/overtime-deduction-settings.dto';
 import { WeekendSettingsDto } from './dto/weekend-settings.dto';
+import { RoleEnum } from 'src/common';
+import { auth } from 'src/common/decorators/auth.decorator';
 
+@auth([RoleEnum.admin])
 @Controller('settings')
 export class SettingsController {
-  constructor(private readonly settingsService: SettingsService) { }
+  constructor(private readonly settingsService: SettingsService) {}
 
   @Post()
   upsert(@Body() createSettingDto: CreateSettingDto) {

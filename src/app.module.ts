@@ -14,6 +14,8 @@ import { DepartmentModule } from './modules/department/department.module';
 import { EmployeeModule } from './modules/employee/employee.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { OfficialHolidaysModule } from './modules/official-holidays/official-holidays.module';
+import { AttendanceModule } from './modules/attendance/attendance.module';
+import { SalaryReportModule } from './modules/salary-report/salary-report.module';
 
 @Module({
   imports: [
@@ -38,9 +40,11 @@ import { OfficialHolidaysModule } from './modules/official-holidays/official-hol
     EmployeeModule,
     SettingsModule,
     OfficialHolidaysModule,
-    CommonModule
+    AttendanceModule,
+    SalaryReportModule,
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
