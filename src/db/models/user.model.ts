@@ -25,8 +25,8 @@ export class User implements IUser {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Role' })
-  roleId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Role', required: false })
+  roleId?: Types.ObjectId;
 
   @Prop({ default: true })
   isActive: boolean;
@@ -35,13 +35,17 @@ export class User implements IUser {
   changeCredentialTime: Date;
 
   @Prop({ enum: RoleEnum, default: RoleEnum.user })
-  role?: RoleEnum;
+  role: RoleEnum;
+
+  // تأكد من الـ Schema
+@Prop({ type: Types.ObjectId, ref: 'UserGroup', required: true })
+userGroupId: Types.ObjectId;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
 UserSchema.index({ email: 1 });
-UserSchema.index({ username: 1 })
+UserSchema.index({ username: 1 });
 
 UserSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
@@ -49,7 +53,6 @@ UserSchema.pre('save', async function (next) {
   }
   next();
 });
-
 
 export const UserModel = MongooseModule.forFeature([
   {

@@ -9,3 +9,4 @@ export * from './attendance.model';
 export * from './settings.model';
 export * from './officialHoliday.model';
 export * from './salaryReport.model';
+export * from './userGroup.model';

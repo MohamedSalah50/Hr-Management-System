@@ -14,7 +14,7 @@ import { SalaryReportService } from './salary-report.service';
 import { GenerateReportDto } from './dto/generate-report.dto';
 import { SearchReportDto } from './dto/search-report.dto';
 
-@auth([RoleEnum.admin])
+@auth([RoleEnum.admin, RoleEnum.superAdmin, RoleEnum.user])
 @Controller('salary-reports')
 export class SalaryReportController {
   constructor(private readonly salaryReportsService: SalaryReportService) {}
@@ -32,7 +32,10 @@ export class SalaryReportController {
    */
   @Post('generate-all')
   generateReportsForAll(@Body() body: { month: number; year: number }) {
-    return this.salaryReportsService.generateReportsForAll(body.month, body.year);
+    return this.salaryReportsService.generateReportsForAll(
+      body.month,
+      body.year,
+    );
   }
 
   /**

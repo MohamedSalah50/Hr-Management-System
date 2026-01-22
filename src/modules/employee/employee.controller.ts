@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
@@ -6,7 +15,7 @@ import { Types } from 'mongoose';
 import { auth } from 'src/common/decorators/auth.decorator';
 import { RoleEnum } from 'src/common';
 
-@auth([RoleEnum.admin])
+@auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('employee')
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
@@ -44,7 +53,7 @@ export class EmployeeController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: Types.ObjectId) {
+  remove(@Param('id') id: string) {
     return this.employeeService.remove(id);
   }
 

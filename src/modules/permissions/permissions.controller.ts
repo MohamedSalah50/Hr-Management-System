@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { PermissionsService } from './permissions.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
@@ -6,7 +15,7 @@ import { Types } from 'mongoose';
 import { auth } from 'src/common/decorators/auth.decorator';
 import { RoleEnum } from 'src/common';
 
-@auth([RoleEnum.admin])
+@auth([RoleEnum.admin, RoleEnum.superAdmin, RoleEnum.user])
 @Controller('permissions')
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}

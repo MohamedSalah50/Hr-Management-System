@@ -21,10 +21,10 @@ import { RoleEnum } from 'src/common';
 import { SearchAttendanceDto } from './dto/search-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 
-@auth([RoleEnum.admin])
+@auth([RoleEnum.admin, RoleEnum.superAdmin, RoleEnum.user])
 @Controller('attendance')
 export class AttendanceController {
-  constructor(private readonly attendanceService: AttendanceService) { }
+  constructor(private readonly attendanceService: AttendanceService) {}
 
   @Post()
   create(@Body() createAttendanceDto: CreateAttendanceDto) {

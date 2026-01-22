@@ -14,7 +14,7 @@ import { UpdateOfficialHolidayDto } from './dto/update-official-holiday.dto';
 import { RoleEnum } from 'src/common';
 import { auth } from 'src/common/decorators/auth.decorator';
 
-@auth([RoleEnum.admin])
+@auth([RoleEnum.admin, RoleEnum.superAdmin, RoleEnum.user])
 @Controller('official-holidays')
 export class OfficialHolidaysController {
   constructor(

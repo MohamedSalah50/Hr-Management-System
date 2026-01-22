@@ -14,7 +14,7 @@ import { WeekendSettingsDto } from './dto/weekend-settings.dto';
 import { RoleEnum } from 'src/common';
 import { auth } from 'src/common/decorators/auth.decorator';
 
-@auth([RoleEnum.admin])
+@auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('settings')
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}

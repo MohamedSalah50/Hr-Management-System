@@ -1,19 +1,23 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { RoleRepository, UserRepository } from 'src/db';
-import { CloudinaryService } from 'src/common';
-import { ChangePasswordDto, CreateUserDto } from './dto/create-user.dto';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { RoleRepository, UserGroupRepository, UserRepository } from 'src/db';
+import { CreateUserDto } from './dto/create-user.dto';
 import { Types } from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { filter } from 'rxjs';
 import { compareHash, generateHash } from 'src/utils';
+import { ChangePasswordDto } from './dto/updatePassword.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly roleRepository: RoleRepository,
-    private readonly cloudinaryService: CloudinaryService,
-  ) { }
+    private readonly userGroupRepository: UserGroupRepository,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     // Validation Rule #1: Check if all data provided
@@ -22,7 +26,7 @@ export class UserService {
       !createUserDto.userName ||
       !createUserDto.email ||
       !createUserDto.password ||
-      !createUserDto.roleId
+      !createUserDto.userGroupId
     ) {
       throw new BadRequestException('من فضلك ادخل كل البيانات المطلوبة');
     }
@@ -38,20 +42,31 @@ export class UserService {
 
     // Check if email already exists
     const existingEmail = await this.userRepository.findOne({
-      filter: { email: createUserDto.email }
+      filter: { email: createUserDto.email },
     });
 
     if (existingEmail) {
       throw new ConflictException('البريد الالكتروني موجود بالفعل');
     }
 
-    // Validation Rule #2: Check if role exists
-    const role = await this.roleRepository.findOne({ filter: { _id: createUserDto.roleId } });
+    // Validation Rule #2: Check if usergroup exists
+    // const role = await this.roleRepository.findOne({
+    //   filter: { _id: new Types.ObjectId(createUserDto.roleId) },
+    // });
 
-    if (!role) {
-      throw new BadRequestException(
-        'من فضلك قم بتحديد صلاحيات المجموعة قبل الاضافة',
-      );
+    // if (!role) {
+    //   throw new BadRequestException(
+    //     'من فضلك قم بتحديد صلاحيات المجموعة قبل الاضافة',
+    //   );
+    // }
+
+    // Validation Rule #2: Check if usergroup exists
+    const userGroupName = await this.userGroupRepository.findOne({
+      filter: { _id: createUserDto.userGroupId },
+    });
+
+    if (!userGroupName) {
+      throw new BadRequestException('من فضلك قم بتحديد المجموعة قبل الاضافة');
     }
 
     // Hash password
@@ -59,16 +74,18 @@ export class UserService {
 
     // Create user
     const user = await this.userRepository.create({
-      data: [{
-        fullName: createUserDto.fullName,
-        userName: createUserDto.userName,
-        email: createUserDto.email,
-        password: createUserDto.password,
-        roleId: new Types.ObjectId(createUserDto.roleId),
-        isActive: true,
-      }]
+      data: [
+        {
+          fullName: createUserDto.fullName,
+          userName: createUserDto.userName,
+          email: createUserDto.email,
+          password: createUserDto.password,
+          // roleId: new Types.ObjectId(createUserDto.roleId) || null,
+          userGroupId: new Types.ObjectId(createUserDto.userGroupId),
+          isActive: true,
+        },
+      ],
     });
-
 
     return {
       message: 'تم إضافة المستخدم بنجاح',
@@ -77,19 +94,17 @@ export class UserService {
   }
 
   async findAll() {
-    const users = await this.userRepository.find(
-      { filter: {}, options: { populate: [{ path: 'roleId', select: 'name description' }] } },
-    );
-
-    // Remove passwords from response
-    const usersWithoutPasswords = users.map((user) => {
-      const { password, ...userWithoutPassword } = user.toObject();
-      return userWithoutPassword;
+    const users = await this.userRepository.find({
+      filter: {},
+      select: { password: 0 },
+      options: {
+        populate: [{ path: 'userGroupId', select: 'name' }],
+      },
     });
 
     return {
-      data: usersWithoutPasswords,
-      total: usersWithoutPasswords.length,
+      data: users,
+      total: users.length,
     };
   }
 
@@ -97,18 +112,20 @@ export class UserService {
    * Find One User - عرض مستخدم واحد
    */
   async findOne(id: string) {
-    const users = await this.userRepository.findOne(
-      { filter: { _id: id }, options: { populate: [{ path: 'roleId', select: 'name description' }] } },
-    );
+    const user = await this.userRepository.findOne({
+      filter: { _id: id },
+      select: { password: 0 },
+      options: {
+        populate: [{ path: 'userGroupId', select: 'name' }],
+      },
+    });
 
-    if (!users) {
+    if (!user) {
       throw new NotFoundException('المستخدم غير موجود');
     }
 
-    const { password, ...userWithoutPassword } = users[0].toObject();
-
     return {
-      data: userWithoutPassword,
+      data: user,
     };
   }
 
@@ -116,21 +133,28 @@ export class UserService {
    * Update User - تعديل بيانات المستخدم
    * Validation Rule #8: Pop up for confirmation
    */
+  // user.service.ts - update method (FIXED)
+
   async update(id: string, updateUserDto: UpdateUserDto) {
     // Check if user exists
-    const existingUser = await this.userRepository.findOne({ filter: { _id: id } });
+    const existingUser = await this.userRepository.findOne({
+      filter: { _id: id },
+    });
 
     if (!existingUser) {
       throw new NotFoundException('المستخدم غير موجود');
     }
 
     // Check if username is being changed and already exists
-    if (updateUserDto.userName && updateUserDto.userName !== existingUser.userName) {
+    if (
+      updateUserDto.userName &&
+      updateUserDto.userName !== existingUser.userName
+    ) {
       const usernameExists = await this.userRepository.findOne({
         filter: {
           userName: updateUserDto.userName,
           _id: { $ne: id },
-        }
+        },
       });
 
       if (usernameExists) {
@@ -144,7 +168,7 @@ export class UserService {
         filter: {
           email: updateUserDto.email,
           _id: { $ne: id },
-        }
+        },
       });
 
       if (emailExists) {
@@ -152,31 +176,36 @@ export class UserService {
       }
     }
 
-    // Check if role exists if being updated
-    if (updateUserDto.roleId) {
-      const role = await this.roleRepository.findOne({ filter: { _id: updateUserDto.roleId } });
+    // Check if group exists if being updated
+    if (updateUserDto.userGroupId) {
+      const userGroup = await this.userGroupRepository.findOne({
+        filter: { _id: updateUserDto.userGroupId },
+      });
 
-      if (!role) {
+      if (!userGroup) {
         throw new BadRequestException('المجموعة غير موجودة');
       }
-
-      updateUserDto.roleId = new Types.ObjectId(updateUserDto.roleId) as any;
     }
 
-    // Hash password if being updated
-    // if (updateUserDto.password) {
-    //   updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
-    // }
+    // Prepare update data
+    const updateData: any = { ...updateUserDto };
+
+    // Convert userGroupId to ObjectId if provided
+    if (updateUserDto.userGroupId) {
+      updateData.userGroupId = new Types.ObjectId(updateUserDto.userGroupId);
+    }
 
     // Update user
-    const updatedUser = await this.userRepository.findOneAndUpdate(
-      { filter: { _id: id }, update: { updateUserDto } },
-    );
+    const updatedUser = await this.userRepository.findOneAndUpdate({
+      filter: { _id: id },
+      update: updateData, // ✅ FIXED: كان { updateUserDto } غلط
+    });
 
     if (!updatedUser) {
       throw new NotFoundException('المستخدم غير موجود');
     }
 
+    // Remove password from response
     const { password, ...userWithoutPassword } = updatedUser.toObject();
 
     return {
@@ -211,7 +240,10 @@ export class UserService {
       throw new NotFoundException('المستخدم غير موجود');
     }
 
-    const updatedUser = await this.userRepository.findOneAndUpdate({ filter: { _id: id }, update: { isActive: !user.isActive } });
+    const updatedUser = await this.userRepository.findOneAndUpdate({
+      filter: { _id: id },
+      update: { isActive: !user.isActive },
+    });
 
     if (!updatedUser) {
       throw new NotFoundException('المستخدم غير موجود');
@@ -229,7 +261,10 @@ export class UserService {
   /**
    * Change Password - تغيير كلمة المرور
    */
-  async changePassword(userId: Types.ObjectId, changePasswordDto: ChangePasswordDto) {
+  async changePassword(
+    userId: Types.ObjectId,
+    changePasswordDto: ChangePasswordDto,
+  ) {
     const user = await this.userRepository.findOne({ filter: { _id: userId } });
 
     if (!user) {
@@ -245,7 +280,10 @@ export class UserService {
     const hashedPassword = await generateHash(changePasswordDto.newPassword);
 
     // Update password and changeCredentialTime
-    await this.userRepository.findOneAndUpdate({ filter: { _id: userId }, update: { password: hashedPassword, changeCredentialTime: new Date() } });
+    await this.userRepository.findOneAndUpdate({
+      filter: { _id: userId },
+      update: { password: hashedPassword, changeCredentialTime: new Date() },
+    });
 
     return {
       message: 'تم تغيير كلمة المرور بنجاح',
@@ -263,7 +301,7 @@ export class UserService {
           { username: { $regex: query, $options: 'i' } },
           { email: { $regex: query, $options: 'i' } },
         ],
-      }
+      },
     });
 
     const usersWithoutPasswords = users.map((user) => {
@@ -280,20 +318,16 @@ export class UserService {
   /**
    * Get Users by Role - عرض المستخدمين حسب المجموعة
    */
-  async getUsersByRole(roleId: string) {
-    const users = await this.userRepository.find(
-      { filter: { roleId: roleId }, options: { populate: [{ path: 'roleId', select: 'name description' }] } }
-    );
-
-    const usersWithoutPasswords = users.map((user) => {
-      const { password, ...userWithoutPassword } = user.toObject();
-      return userWithoutPassword;
+  async getUsersByGroup(userGroupId: string) {
+    const users = await this.userRepository.find({
+      filter: { userGroupId },
+      select: '-password',
+      options: { populate: [{ path: 'userGroupId', select: 'name' }] },
     });
 
     return {
-      data: usersWithoutPasswords,
-      total: usersWithoutPasswords.length,
+      data: users,
+      total: users.length,
     };
   }
-
 }

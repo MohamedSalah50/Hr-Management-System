@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateOfficialHolidayDto } from './dto/create-official-holiday.dto';
 import { UpdateOfficialHolidayDto } from './dto/update-official-holiday.dto';
 import { OfficialHolidayRepository } from 'src/db';
@@ -7,24 +11,35 @@ import { OfficialHolidayRepository } from 'src/db';
 export class OfficialHolidaysService {
   constructor(
     private readonly officialHolidayRepository: OfficialHolidayRepository,
-  ) { }
+  ) {}
 
   /**
    * Create Official Holiday - إضافة إجازة رسمية
    */
   async create(createOfficialHolidayDto: CreateOfficialHolidayDto) {
-
     // Validate year
     if (createOfficialHolidayDto.year < 2008) {
       throw new BadRequestException('السنة يجب ألا تقل عن 2008');
     }
 
+    const existingHoliday = await this.officialHolidayRepository.findOne({
+      filter: {
+        name: createOfficialHolidayDto.name,
+      },
+    });
+
+    if (existingHoliday) {
+      throw new BadRequestException('الإجازة الرسمية موجودة بالفعل');
+    }
+
     const holiday = await this.officialHolidayRepository.create({
-      data: [{
-        ...createOfficialHolidayDto,
-        date: new Date(createOfficialHolidayDto.date),
-        isRecurring: createOfficialHolidayDto.isRecurring || false,
-      }]
+      data: [
+        {
+          ...createOfficialHolidayDto,
+          date: new Date(createOfficialHolidayDto.date),
+          isRecurring: false,
+        },
+      ],
     });
 
     return {
@@ -53,7 +68,9 @@ export class OfficialHolidaysService {
    * Find One Official Holiday
    */
   async findOne(id: string) {
-    const holiday = await this.officialHolidayRepository.findOne({ filter: { _id: id } });
+    const holiday = await this.officialHolidayRepository.findOne({
+      filter: { _id: id },
+    });
 
     if (!holiday) {
       throw new NotFoundException('الإجازة الرسمية غير موجودة');
@@ -68,17 +85,16 @@ export class OfficialHolidaysService {
    * Update Official Holiday
    */
   async update(id: string, updateOfficialHolidayDto: UpdateOfficialHolidayDto) {
-    const existing = await this.officialHolidayRepository.findOne({ filter: { _id: id } });
+    const existing = await this.officialHolidayRepository.findOne({
+      filter: { _id: id },
+    });
 
     if (!existing) {
       throw new NotFoundException('الإجازة الرسمية غير موجودة');
     }
 
     // Validate year if provided
-    if (
-      updateOfficialHolidayDto.year &&
-      updateOfficialHolidayDto.year < 2008
-    ) {
+    if (updateOfficialHolidayDto.year && updateOfficialHolidayDto.year < 2008) {
       throw new BadRequestException('السنة يجب ألا تقل عن 2008');
     }
 
@@ -88,9 +104,10 @@ export class OfficialHolidaysService {
       updateData.date = new Date(updateOfficialHolidayDto.date);
     }
 
-    const holiday = await this.officialHolidayRepository.findOneAndUpdate(
-      { filter: { _id: id }, update: updateData },
-    );
+    const holiday = await this.officialHolidayRepository.findOneAndUpdate({
+      filter: { _id: id },
+      update: updateData,
+    });
 
     return {
       message: 'تم تعديل الإجازة الرسمية بنجاح',
@@ -102,7 +119,9 @@ export class OfficialHolidaysService {
    * Remove Official Holiday
    */
   async remove(id: string) {
-    const holiday = await this.officialHolidayRepository.findOneAndDelete({ filter: { _id: id } });
+    const holiday = await this.officialHolidayRepository.findOneAndDelete({
+      filter: { _id: id },
+    });
 
     if (!holiday) {
       throw new NotFoundException('الإجازة الرسمية غير موجودة');

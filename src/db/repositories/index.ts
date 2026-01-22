@@ -10,3 +10,4 @@ export * from './settings.repository';
 export * from './officialHolidays.repository';
 export * from './salaryReport.repository';
 export * from "./otp.repository"
+export * from "./userGroup.repository"

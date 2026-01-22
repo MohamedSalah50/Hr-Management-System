@@ -1,15 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { Types } from 'mongoose';
+import { RoleEnum } from 'src/common';
+import { auth } from 'src/common/decorators/auth.decorator';
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
-import { Types } from 'mongoose';
-import { auth } from 'src/common/decorators/auth.decorator';
-import { RoleEnum } from 'src/common';
 
-@auth([RoleEnum.admin])
+@auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('departments')
 export class DepartmentController {
-  constructor(private readonly departmentService: DepartmentService) { }
+  constructor(private readonly departmentService: DepartmentService) {}
 
   @Post()
   create(@Body() createDepartmentDto: CreateDepartmentDto) {

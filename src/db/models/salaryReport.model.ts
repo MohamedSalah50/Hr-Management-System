@@ -49,7 +49,6 @@ export const SalaryReportSchema = SchemaFactory.createForClass(SalaryReport);
 
 // Create compound unique index
 SalaryReportSchema.index({ employeeId: 1, month: 1, year: 1 }, { unique: true });
-SalaryReportSchema.index({ month: 1, year: 1 });
 
 export const SalaryReportModel = MongooseModule.forFeature([
   {

@@ -53,8 +53,7 @@ export type EmployeeDocument = HydratedDocument<Employee>;
 
 export const EmployeeSchema = SchemaFactory.createForClass(Employee);
 
-EmployeeSchema.index({ nationalId: 1 });
-EmployeeSchema.index({ departmentId: 1 });
+EmployeeSchema.index({ nationalId: 1, departmentId: 1 });
 
 export const EmployeeModel = MongooseModule.forFeature([
   {

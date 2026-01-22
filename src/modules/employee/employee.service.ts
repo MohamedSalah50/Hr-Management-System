@@ -208,7 +208,7 @@ export class EmployeeService {
    * Remove Employee - حذف موظف
    * Validation Rule #9: Pop up for confirmation
    */
-  async remove(id: Types.ObjectId) {
+  async remove(id: string) {
     const employee = await this.employeeRepository.findOneAndDelete({ filter: { _id: id } });
 
     if (!employee) {

@@ -16,6 +16,7 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { OfficialHolidaysModule } from './modules/official-holidays/official-holidays.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { SalaryReportModule } from './modules/salary-report/salary-report.module';
+import { UserGroupModule } from './modules/user-group/user-group.module';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { SalaryReportModule } from './modules/salary-report/salary-report.module
       isGlobal: true,
     }),
 
-    MongooseModule.forRoot(process.env.MONGO_URI as string, {
+    MongooseModule.forRoot(process.env.MONGODB_URI as string, {
       connectionFactory: (connection) => {
         console.log('✅ Connected to MongoDB :', connection.name);
         return connection;
@@ -35,6 +36,7 @@ import { SalaryReportModule } from './modules/salary-report/salary-report.module
     AuthModule,
     UserModule,
     PermissionsModule,
+    UserGroupModule,
     RoleModule,
     DepartmentModule,
     EmployeeModule,

@@ -14,7 +14,7 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 import { auth } from 'src/common/decorators/auth.decorator';
 import { RoleEnum } from 'src/common';
 
-@auth([RoleEnum.admin])
+@auth([RoleEnum.admin, RoleEnum.superAdmin, RoleEnum.user])
 @Controller('role')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}

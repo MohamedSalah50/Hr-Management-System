@@ -1,33 +1,33 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateSettingDto } from './dto/create-setting.dto';
-import { UpdateSettingDto } from './dto/update-setting.dto';
 import { SettingRepository } from 'src/db';
-import { filter } from 'rxjs';
 import { OvertimeDeductionSettingsDto } from './dto/overtime-deduction-settings.dto';
 import { SettingsEnum } from 'src/common';
 import { WeekendSettingsDto } from './dto/weekend-settings.dto';
 
 @Injectable()
 export class SettingsService {
-
-  constructor(private readonly settingRepository: SettingRepository) { }
+  constructor(private readonly settingRepository: SettingRepository) {}
   async upsert(createSettingDto: CreateSettingDto) {
     const existing = await this.settingRepository.findOne({
       filter: { key: createSettingDto.key },
     });
 
     if (existing) {
-      const updated = await this.settingRepository.findOneAndUpdate(
-        {
-          filter: { _id: existing._id.toString() }, update: {
-            $set: {
-              value: createSettingDto.value,
-              dataType: createSettingDto.dataType,
-              description: createSettingDto.description,
-            }
-          }
+      const updated = await this.settingRepository.findOneAndUpdate({
+        filter: { _id: existing._id.toString() },
+        update: {
+          $set: {
+            value: createSettingDto.value,
+            dataType: createSettingDto.dataType,
+            description: createSettingDto.description,
+          },
         },
-      );
+      });
 
       return {
         message: 'تم تحديث الإعداد بنجاح',
@@ -35,7 +35,9 @@ export class SettingsService {
       };
     }
 
-    const setting = await this.settingRepository.create({ data: [{ ...createSettingDto }] });
+    const setting = await this.settingRepository.create({
+      data: [{ ...createSettingDto }],
+    });
 
     return {
       message: 'تم إضافة الإعداد بنجاح',
@@ -79,24 +81,35 @@ export class SettingsService {
       throw new NotFoundException('الإعداد غير موجود');
     }
 
-    await this.settingRepository.findOneAndDelete({ filter: { _id: setting._id.toString() } });;
+    await this.settingRepository.findOneAndDelete({
+      filter: { _id: setting._id.toString() },
+    });
 
     return {
       message: 'تم حذف الإعداد بنجاح',
     };
   }
 
+  // settings.service.ts - Improved Version
+
   /**
    * Save Overtime & Deduction Settings
-   * Validation Rules من PDF (نقطة 5)
+   * Validation Rules من SRS (Section 5)
    */
   async saveOvertimeDeductionSettings(dto: OvertimeDeductionSettingsDto) {
     // Validation Rule #2: Check if all fields are filled
     if (
       dto.overtimeRatePerHour === undefined ||
-      dto.deductionRatePerHour === undefined
+      dto.overtimeRatePerHour === null ||
+      dto.deductionRatePerHour === undefined ||
+      dto.deductionRatePerHour === null
     ) {
       throw new BadRequestException('من فضلك ادخال بيانات الحقل');
+    }
+
+    // Additional validation: rates should be positive
+    if (dto.overtimeRatePerHour < 0 || dto.deductionRatePerHour < 0) {
+      throw new BadRequestException('يجب أن تكون القيم موجبة');
     }
 
     // Save overtime rate
@@ -115,7 +128,7 @@ export class SettingsService {
       description: 'معدل الخصم للساعة الواحدة',
     });
 
-    // Validation Rule #1: Success message
+    // Validation Rule #1: Success message (تم الحفظ بنجاح)
     return {
       message: 'تم الحفظ بنجاح',
       data: {
@@ -146,12 +159,24 @@ export class SettingsService {
 
   /**
    * Save Weekend Settings
+   * يقوم HR بتحديد أيام الإجازة (الجمعة والسبت أو الجمعة فقط)
    */
   async saveWeekendSettings(dto: WeekendSettingsDto) {
-
     // Validation Rule #2: Check if weekend days are provided
     if (!dto.weekendDays || dto.weekendDays.length === 0) {
       throw new BadRequestException('من فضلك ادخال بيانات الحقل');
+    }
+
+    // Validate days (only Friday and Saturday allowed based on SRS)
+    const allowedDays = ['Friday', 'Saturday'];
+    const invalidDays = dto.weekendDays.filter(
+      (day) => !allowedDays.includes(day),
+    );
+
+    if (invalidDays.length > 0) {
+      throw new BadRequestException(
+        'أيام الإجازة المسموحة هي الجمعة والسبت فقط',
+      );
     }
 
     await this.upsert({
@@ -174,13 +199,13 @@ export class SettingsService {
    * Get Weekend Settings
    */
   async getWeekendSettings() {
-    const setting = await this.settingRepository.findOne({
+    const weekendDays = await this.settingRepository.findOne({
       filter: { key: 'weekend_days' },
     });
 
     return {
       data: {
-        weekendDays: setting?.value || ['Friday', 'Saturday'],
+        weekendDays: weekendDays?.value || [],
       },
     };
   }

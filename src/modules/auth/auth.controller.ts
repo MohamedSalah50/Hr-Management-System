@@ -52,7 +52,7 @@ export class AuthController {
   }
 
   @Post('/refresh-token')
-  @auth([RoleEnum.user, RoleEnum.admin], tokenEnum.refresh)
+  @auth([RoleEnum.user, RoleEnum.admin, RoleEnum.superAdmin], tokenEnum.refresh)
   async refreshToken(
     @Req() req: IAuthRequest,
   ): Promise<IResponse<LoginResponse>> {
@@ -60,13 +60,13 @@ export class AuthController {
     return successResponse<LoginResponse>({ data: { credentials } });
   }
 
-  @auth([RoleEnum.user, RoleEnum.admin])
+  @auth([RoleEnum.user, RoleEnum.admin, RoleEnum.superAdmin])
   @Post('logout')
   async logout(@Req() req: IAuthRequest) {
     return await this.authService.logout(req);
   }
 
-  @auth([RoleEnum.user, RoleEnum.admin])
+  @auth([RoleEnum.user, RoleEnum.admin, RoleEnum.superAdmin])
   @Get('me')
   async getCurrentUser(@Req() req: IAuthRequest) {
     return await this.authService.getCurrentUser(req.user._id.toString());
