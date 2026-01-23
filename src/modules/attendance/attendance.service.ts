@@ -1,7 +1,16 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
-import { AttendanceRepository, EmployeeRepository, OfficialHolidayRepository } from 'src/db';
+import {
+  AttendanceRepository,
+  EmployeeRepository,
+  OfficialHolidayRepository,
+} from 'src/db';
 import { AttendanceCalculatorHelper } from './helpers/attendance-calculator.helper';
 import { Types } from 'mongoose';
 import { AttendanceEnum } from 'src/common';
@@ -15,16 +24,16 @@ export class AttendanceService {
     private readonly employeeRepository: EmployeeRepository,
     private readonly officialHolidayRepository: OfficialHolidayRepository,
     private readonly attendanceCalculator: AttendanceCalculatorHelper,
-  ) { }
+  ) {}
 
   /**
    * Create Attendance Record - إضافة سجل حضور
    */
   async create(createAttendanceDto: CreateAttendanceDto) {
     // Check if employee exists
-    const employee = await this.employeeRepository.findOne(
-      { filter: { _id: createAttendanceDto.employeeId } },
-    );
+    const employee = await this.employeeRepository.findOne({
+      filter: { _id: createAttendanceDto.employeeId },
+    });
 
     if (!employee) {
       throw new NotFoundException('الموظف غير موجود');
@@ -33,13 +42,17 @@ export class AttendanceService {
     // Check if attendance already exists for this date
     const existingAttendance = await this.attendanceRepository.findOne({
       filter: {
-        employeeId: new Types.ObjectId(createAttendanceDto.employeeId),
-        date: new Date(createAttendanceDto.date),
-      }
+        $and: [
+          { employeeId: new Types.ObjectId(createAttendanceDto.employeeId) },
+          { date: new Date(createAttendanceDto.date) },
+        ],
+      },
     });
 
     if (existingAttendance) {
-      throw new ConflictException('سجل الحضور موجود بالفعل لهذا التاريخ');
+      throw new ConflictException(
+        'سجل الحضور موجود بالفعل لهذا التاريخ او الموظف مسجل من قبل',
+      );
     }
 
     const date = new Date(createAttendanceDto.date);
@@ -49,7 +62,9 @@ export class AttendanceService {
 
     // Check if official holiday
     const year = date.getFullYear();
-    const holidays = await this.officialHolidayRepository.find({ filter: { year } });
+    const holidays = await this.officialHolidayRepository.find({
+      filter: { year },
+    });
     const isHoliday = (holidays as any[]).some((holiday: any) => {
       const holidayDate = new Date(holiday.date);
       return (
@@ -86,21 +101,23 @@ export class AttendanceService {
     }
 
     const attendance = await this.attendanceRepository.create({
-      data: [{
-        employeeId: new Types.ObjectId(createAttendanceDto.employeeId),
-        date: date,
-        checkIn: createAttendanceDto.checkIn,
-        checkOut: createAttendanceDto.checkOut,
-        lateHours: Number(lateHours.toFixed(2)),
-        overtimeHours: Number(overtimeHours.toFixed(2)),
-        status,
-        notes: createAttendanceDto.notes,
-      }]
+      data: [
+        {
+          employeeId: new Types.ObjectId(createAttendanceDto.employeeId),
+          date: date,
+          checkIn: createAttendanceDto.checkIn,
+          checkOut: createAttendanceDto.checkOut,
+          lateHours: Number(lateHours.toFixed(2)),
+          overtimeHours: Number(overtimeHours.toFixed(2)),
+          status,
+          notes: createAttendanceDto.notes,
+        },
+      ],
     });
 
     return {
       message: 'تم إضافة سجل الحضور بنجاح',
-      data: attendance,
+      data: { attendance },
     };
   }
 
@@ -108,9 +125,16 @@ export class AttendanceService {
    * Find All Attendance Records - عرض كل سجلات الحضور
    */
   async findAll() {
-    const records = await this.attendanceRepository.find(
-      { filter: {}, options: { populate: { path: 'employeeId', select: 'fullName nationalId departmentId' }, sort: { date: -1 } } },
-    );
+    const records = await this.attendanceRepository.find({
+      filter: {},
+      options: {
+        populate: {
+          path: 'employeeId',
+          select: 'fullName nationalId departmentId',
+        },
+        sort: { date: -1 },
+      },
+    });
 
     return {
       data: records,
@@ -122,9 +146,16 @@ export class AttendanceService {
    * Find One Attendance Record
    */
   async findOne(id: string) {
-    const records = await this.attendanceRepository.find(
-      { filter: { _id: id }, options: { populate: { path: 'employeeId', select: 'fullName nationalId', populate: { path: 'departmentId', select: 'name' } } } }
-    );
+    const records = await this.attendanceRepository.find({
+      filter: { _id: id },
+      options: {
+        populate: {
+          path: 'employeeId',
+          select: 'fullName nationalId',
+          populate: { path: 'departmentId', select: 'name' },
+        },
+      },
+    });
 
     if (!records || records.length === 0) {
       throw new NotFoundException('سجل الحضور غير موجود');
@@ -140,7 +171,9 @@ export class AttendanceService {
    * Validation Rule #4: Pop up for confirmation
    */
   async update(id: string, updateAttendanceDto: UpdateAttendanceDto) {
-    const existing = await this.attendanceRepository.findOne({ filter: { _id: id } });
+    const existing = await this.attendanceRepository.findOne({
+      filter: { _id: id },
+    });
 
     if (!existing) {
       throw new NotFoundException('سجل الحضور غير موجود');
@@ -175,12 +208,15 @@ export class AttendanceService {
     }
 
     if (updateAttendanceDto.employeeId) {
-      updateData.employeeId = new Types.ObjectId(updateAttendanceDto.employeeId);
+      updateData.employeeId = new Types.ObjectId(
+        updateAttendanceDto.employeeId,
+      );
     }
 
-    const attendance = await this.attendanceRepository.findOneAndUpdate(
-      { filter: { _id: id }, update: updateData },
-    );
+    const attendance = await this.attendanceRepository.findOneAndUpdate({
+      filter: { _id: id },
+      update: updateData,
+    });
 
     return {
       message: 'تم تعديل سجل الحضور بنجاح',
@@ -193,7 +229,9 @@ export class AttendanceService {
    * Validation Rule #5: Pop up for confirmation
    */
   async remove(id: string) {
-    const attendance = await this.attendanceRepository.findOneAndDelete({ filter: { _id: id } });
+    const attendance = await this.attendanceRepository.findOneAndDelete({
+      filter: { _id: id },
+    });
 
     if (!attendance) {
       throw new NotFoundException('سجل الحضور غير موجود');
@@ -271,12 +309,19 @@ export class AttendanceService {
       throw new BadRequestException('هذه الحقول مطلوبة');
     }
 
-    const records = await this.attendanceRepository.find(
-      {
-        filter,
-        options: { populate: [{ path: 'employeeId', select: 'fullName nationalId', populate: { path: 'departmentId', select: 'name' } }], sort: { date: -1 } }
-      }
-    );
+    const records = await this.attendanceRepository.find({
+      filter,
+      options: {
+        populate: [
+          {
+            path: 'employeeId',
+            select: 'fullName nationalId',
+            populate: { path: 'departmentId', select: 'name' },
+          },
+        ],
+        sort: { date: -1 },
+      },
+    });
 
     return {
       data: records,
@@ -360,14 +405,14 @@ export class AttendanceService {
     const data = records.map((record: any) => ({
       'اسم الموظف': record.employeeId?.fullName || '',
       'الرقم القومي': record.employeeId?.nationalId || '',
-      'القسم': record.employeeId?.departmentId?.name || '',
-      'التاريخ': new Date(record.date).toLocaleDateString('ar-EG'),
+      القسم: record.employeeId?.departmentId?.name || '',
+      التاريخ: new Date(record.date).toLocaleDateString('ar-EG'),
       'وقت الحضور': record.checkIn || '',
       'وقت الانصراف': record.checkOut || '',
       'ساعات التأخير': record.lateHours || 0,
       'ساعات الإضافي': record.overtimeHours || 0,
-      'الحالة': record.status || '',
-      'ملاحظات': record.notes || '',
+      الحالة: record.status || '',
+      ملاحظات: record.notes || '',
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -401,12 +446,10 @@ export class AttendanceService {
       presentDays: typedRecords.filter(
         (r) => r.status === AttendanceEnum.Precent,
       ).length,
-      absentDays: typedRecords.filter(
-        (r) => r.status === AttendanceEnum.Abcent,
-      ).length,
-      holidays: typedRecords.filter(
-        (r) => r.status === AttendanceEnum.Holiday,
-      ).length,
+      absentDays: typedRecords.filter((r) => r.status === AttendanceEnum.Abcent)
+        .length,
+      holidays: typedRecords.filter((r) => r.status === AttendanceEnum.Holiday)
+        .length,
       totalLateHours: typedRecords.reduce(
         (sum, r) => sum + (r.lateHours || 0),
         0,
