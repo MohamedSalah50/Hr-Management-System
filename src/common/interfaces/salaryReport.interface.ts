@@ -7,6 +7,8 @@ export interface ISalaryReport {
     baseSalary: number;
     daysPresent: number;
     daysAbsent: number;
+    holidays: number;
+    sickLeave: number;
     overtimeHours: number;
     lateHours: number;
     overtimeAmount: number;

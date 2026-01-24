@@ -27,6 +27,12 @@ export class SalaryReport implements ISalaryReport {
   @Prop({ required: true, type: Number })
   daysAbsent: number;
 
+  @Prop({ default: 0, type: Number })
+  holidays: number;
+
+  @Prop({ default: 0, type: Number })
+  sickLeave: number;
+
   @Prop({ required: true, type: Number })
   overtimeHours: number;
 

@@ -40,7 +40,7 @@ export class SalaryCalculatorHelper {
      */
     async getAttendanceStats(employeeId: string, month: number, year: number) {
         const startDate = new Date(year, month - 1, 1);
-        const endDate = new Date(year, month, 0);
+        const endDate = new Date(year, month, 0, 23, 59, 59);
 
         const records = await this.attendanceRepository.find({
             filter: {
@@ -49,18 +49,40 @@ export class SalaryCalculatorHelper {
             },
         });
 
-        // ✅ Type assertion
         const typedRecords = records as any[];
 
         const stats = {
+            // ✅ أيام الحضور
             daysPresent: typedRecords.filter(
-                (r) => r.status === 'present', // or use your enum
+                (r) => r.status === AttendanceEnum.Precent
             ).length,
+
+            // ✅ أيام الغياب (فقط اللي هيتخصم)
             daysAbsent: typedRecords.filter(
-                (r) => r.status === 'absent',
+                (r) => r.status === AttendanceEnum.Abcent
             ).length,
-            overtimeHours: typedRecords.reduce((sum, r) => sum + (r.overtimeHours || 0), 0),
-            lateHours: typedRecords.reduce((sum, r) => sum + (r.lateHours || 0), 0),
+
+            // ✅ الإجازات الرسمية (مش هيتخصم)
+            holidays: typedRecords.filter(
+                (r) => r.status === AttendanceEnum.Holiday
+            ).length,
+
+            // ✅ الإجازات المرضية (مش هيتخصم)
+            sickLeave: typedRecords.filter(
+                (r) => r.status === AttendanceEnum.Sick_leave
+            ).length,
+
+            // مجموع ساعات الإضافي
+            overtimeHours: typedRecords.reduce(
+                (sum, r) => sum + (r.overtimeHours || 0),
+                0
+            ),
+
+            // مجموع ساعات التأخير
+            lateHours: typedRecords.reduce(
+                (sum, r) => sum + (r.lateHours || 0),
+                0
+            ),
         };
 
         return stats;
@@ -101,16 +123,19 @@ export class SalaryCalculatorHelper {
         daysPresent: number,
         daysAbsent: number,
         workingDays: number,
+        holidays: number,        
+        sickLeave: number,       
     ): Promise<number> {
-        // BASIC FORMULA (needs refinement):
-        // Net = Base Salary + Overtime - Deduction - (Absent Days Penalty)
-
-        // Calculate absent days penalty
+        // 1. حساب الراتب اليومي
         const dailySalary = baseSalary / workingDays;
+
+        // 2. حساب عقوبة الغياب
+        // ✅ فقط daysAbsent يُخصم، holidays و sickLeave لا يُخصموا
         const absentPenalty = dailySalary * daysAbsent;
 
+        // 3. حساب صافي الراتب
         const netSalary = baseSalary + overtimeAmount - deductionAmount - absentPenalty;
 
-        return Number(Math.max(0, netSalary).toFixed(2)); // Ensure non-negative
+        return Number(Math.max(0, netSalary).toFixed(2));
     }
 }

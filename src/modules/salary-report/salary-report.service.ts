@@ -80,6 +80,8 @@ export class SalaryReportService {
       attendanceStats.daysPresent,
       attendanceStats.daysAbsent,
       workingDays,
+      attendanceStats.holidays,
+      attendanceStats.sickLeave,
     );
 
     // ✅ FIX: Get first element from create result
@@ -92,6 +94,8 @@ export class SalaryReportService {
           baseSalary: (employee as any).baseSalary,
           daysPresent: attendanceStats.daysPresent,
           daysAbsent: attendanceStats.daysAbsent,
+          holidays: attendanceStats.holidays,
+          sickLeave: attendanceStats.sickLeave,
           overtimeHours: Number(attendanceStats.overtimeHours.toFixed(2)),
           lateHours: Number(attendanceStats.lateHours.toFixed(2)),
           overtimeAmount,
@@ -321,7 +325,7 @@ export class SalaryReportService {
         ...summary,
       },
     };
-  } 
+  }
 
   /**
    * Export Report to PDF-ready format

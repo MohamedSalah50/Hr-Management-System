@@ -15,11 +15,11 @@ export class Attendance implements IAttendance {
   @Prop({ required: true, type: Date })
   date: Date;
 
-  @Prop()
-  checkIn: string; // format: "09:15"
+  @Prop({ type: String, required: false, default: null })
+  checkIn?: string; // format: "09:15"
 
-  @Prop()
-  checkOut: string; // format: "17:30"
+  @Prop({ type: String, required: false, default: null })
+  checkOut?: string; // format: "17:30"
 
   @Prop({ default: 0, type: Number })
   overtimeHours: number;

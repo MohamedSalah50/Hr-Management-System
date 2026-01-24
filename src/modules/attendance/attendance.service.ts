@@ -24,13 +24,13 @@ export class AttendanceService {
     private readonly employeeRepository: EmployeeRepository,
     private readonly officialHolidayRepository: OfficialHolidayRepository,
     private readonly attendanceCalculator: AttendanceCalculatorHelper,
-  ) {}
+  ) { }
 
   /**
    * Create Attendance Record - إضافة سجل حضور
    */
   async create(createAttendanceDto: CreateAttendanceDto) {
-    // Check if employee exists
+    // 1. التحقق من وجود الموظف
     const employee = await this.employeeRepository.findOne({
       filter: { _id: createAttendanceDto.employeeId },
     });
@@ -39,28 +39,32 @@ export class AttendanceService {
       throw new NotFoundException('الموظف غير موجود');
     }
 
-    // Check if attendance already exists for this date
+    // 2. التحقق من عدم تكرار السجل
     const existingAttendance = await this.attendanceRepository.findOne({
       filter: {
-        $and: [
-          { employeeId: new Types.ObjectId(createAttendanceDto.employeeId) },
-          { date: new Date(createAttendanceDto.date) },
-        ],
+        employeeId: new Types.ObjectId(createAttendanceDto.employeeId),
+        date: new Date(createAttendanceDto.date),
       },
     });
 
     if (existingAttendance) {
-      throw new ConflictException(
-        'سجل الحضور موجود بالفعل لهذا التاريخ او الموظف مسجل من قبل',
-      );
+      throw new ConflictException('سجل الحضور موجود بالفعل لهذا التاريخ');
     }
 
     const date = new Date(createAttendanceDto.date);
 
-    // Check if weekend
+    // ============================================
+    // 3. تحديد الـ Status التلقائي
+    // ============================================
+
+    let finalStatus = createAttendanceDto.status || AttendanceEnum.Precent;
+    let lateHours = 0;
+    let overtimeHours = 0;
+
+    // أولاً: التحقق من الويك إند
     const isWeekend = await this.attendanceCalculator.isWeekend(date);
 
-    // Check if official holiday
+    // ثانياً: التحقق من الإجازات الرسمية
     const year = date.getFullYear();
     const holidays = await this.officialHolidayRepository.find({
       filter: { year },
@@ -73,33 +77,45 @@ export class AttendanceService {
       );
     });
 
-    // Calculate late and overtime hours
-    let lateHours = 0;
-    let overtimeHours = 0;
-    let status = createAttendanceDto.status || AttendanceEnum.Precent;
+    // ============================================
+    // 4. Logic حسب الحالة
+    // ============================================
 
     if (isWeekend || isHoliday) {
-      status = AttendanceEnum.Holiday;
-    } else {
-      if (createAttendanceDto.checkIn) {
-        lateHours = await this.attendanceCalculator.calculateLateHours(
-          createAttendanceDto.employeeId,
-          createAttendanceDto.checkIn,
-        );
+      // ✅ لو ويك إند أو إجازة رسمية → status = holiday (حتى لو المستخدم اختار غير كده)
+      finalStatus = AttendanceEnum.Holiday;
+      // لا يُحسب تأخير أو إضافي في الإجازات
+
+    } else if (finalStatus === AttendanceEnum.Abcent) {
+      // ✅ لو اختار "غائب" → مش محتاج checkIn/checkOut
+      // لا يُحسب تأخير أو إضافي للغياب
+
+    } else if (finalStatus === AttendanceEnum.Sick_leave) {
+      // ✅ لو اختار "إجازة مرضية" → مش محتاج checkIn/checkOut
+      // لا يُحسب تأخير أو إضافي
+
+    } else if (finalStatus === AttendanceEnum.Precent) {
+      // ✅ لو "حاضر" → لازم checkIn على الأقل
+      if (!createAttendanceDto.checkIn) {
+        throw new BadRequestException('وقت الحضور مطلوب للموظف الحاضر');
       }
 
+      // حساب التأخير
+      lateHours = await this.attendanceCalculator.calculateLateHours(
+        createAttendanceDto.employeeId,
+        createAttendanceDto.checkIn,
+      );
+
+      // حساب الإضافي (إذا وُجد checkOut)
       if (createAttendanceDto.checkOut) {
         overtimeHours = await this.attendanceCalculator.calculateOvertimeHours(
           createAttendanceDto.employeeId,
           createAttendanceDto.checkOut,
         );
       }
-
-      if (!createAttendanceDto.checkIn && !createAttendanceDto.checkOut) {
-        status = AttendanceEnum.Abcent;
-      }
     }
 
+    // 5. حفظ السجل
     const attendance = await this.attendanceRepository.create({
       data: [
         {
@@ -109,7 +125,7 @@ export class AttendanceService {
           checkOut: createAttendanceDto.checkOut,
           lateHours: Number(lateHours.toFixed(2)),
           overtimeHours: Number(overtimeHours.toFixed(2)),
-          status,
+          status: finalStatus,
           notes: createAttendanceDto.notes,
         },
       ],
@@ -117,7 +133,7 @@ export class AttendanceService {
 
     return {
       message: 'تم إضافة سجل الحضور بنجاح',
-      data: { attendance },
+      data: attendance,
     };
   }
 
