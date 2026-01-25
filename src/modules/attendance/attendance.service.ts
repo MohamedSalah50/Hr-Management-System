@@ -24,7 +24,7 @@ export class AttendanceService {
     private readonly employeeRepository: EmployeeRepository,
     private readonly officialHolidayRepository: OfficialHolidayRepository,
     private readonly attendanceCalculator: AttendanceCalculatorHelper,
-  ) { }
+  ) {}
 
   /**
    * Create Attendance Record - إضافة سجل حضور
@@ -85,15 +85,12 @@ export class AttendanceService {
       // ✅ لو ويك إند أو إجازة رسمية → status = holiday (حتى لو المستخدم اختار غير كده)
       finalStatus = AttendanceEnum.Holiday;
       // لا يُحسب تأخير أو إضافي في الإجازات
-
     } else if (finalStatus === AttendanceEnum.Abcent) {
       // ✅ لو اختار "غائب" → مش محتاج checkIn/checkOut
       // لا يُحسب تأخير أو إضافي للغياب
-
     } else if (finalStatus === AttendanceEnum.Sick_leave) {
       // ✅ لو اختار "إجازة مرضية" → مش محتاج checkIn/checkOut
       // لا يُحسب تأخير أو إضافي
-
     } else if (finalStatus === AttendanceEnum.Precent) {
       // ✅ لو "حاضر" → لازم checkIn على الأقل
       if (!createAttendanceDto.checkIn) {
@@ -147,6 +144,7 @@ export class AttendanceService {
         populate: {
           path: 'employeeId',
           select: 'fullName nationalId departmentId',
+          populate: { path: 'departmentId', select: 'name' },
         },
         sort: { date: -1 },
       },
