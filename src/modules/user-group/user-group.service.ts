@@ -22,7 +22,6 @@ export class UserGroupsService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  // إضافة مجموعة جديدة
   async create(createUserGroupDto: CreateUserGroupDto) {
     // التحقق من وجود المجموعة
     const existing = await this.userGroupRepository.findOne({
@@ -61,7 +60,6 @@ export class UserGroupsService {
     };
   }
 
-  // عرض كل المجموعات
   async findAll() {
     const userGroups = await this.userGroupRepository.find({
       filter: {},
@@ -79,7 +77,6 @@ export class UserGroupsService {
     };
   }
 
-  // عرض مجموعة واحدة
   async findOne(id: Types.ObjectId) {
     if (!isValidObjectId(id)) {
       throw new NotFoundException('المعرف غير صالح');
@@ -115,6 +112,14 @@ export class UserGroupsService {
 
     if (!existing) {
       throw new NotFoundException('المجموعة غير موجودة');
+    }
+
+    const existingName = await this.userGroupRepository.findOne({
+      filter: { name: updateUserGroupDto.name },
+    });
+
+    if (existingName && existingName._id.toString() !== id.toString()) {
+      throw new ConflictException('الاسم موجود بالفعل');
     }
 
     // التحقق من الصلاحيات إذا تم تحديثها

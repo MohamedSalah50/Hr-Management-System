@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { DepartmentRepository, EmployeeRepository } from 'src/db';
@@ -7,16 +12,15 @@ import { filter } from 'rxjs';
 
 @Injectable()
 export class EmployeeService {
-
   constructor(
     private readonly employeeRepository: EmployeeRepository,
     private readonly departmentRepository: DepartmentRepository,
-  ) { }
+  ) {}
 
   /**
-  * Create Employee - إضافة موظف
-  * Validation Rules من PDF (نقطة 4)
-  */
+   * Create Employee - إضافة موظف
+   * Validation Rules من PDF (نقطة 4)
+   */
   async create(createEmployeeDto: CreateEmployeeDto) {
     // Validation Rule #2: Check if all required fields are filled
     const requiredFields = [
@@ -42,11 +46,18 @@ export class EmployeeService {
 
     // Check if national ID already exists
     const existingEmployee = await this.employeeRepository.findOne({
-      filter: { nationalId: createEmployeeDto.nationalId }
+      filter: {
+        $or: [
+          { nationalId: createEmployeeDto.nationalId },
+          { fullName: createEmployeeDto.fullName },
+        ],
+      },
     });
 
     if (existingEmployee) {
-      throw new ConflictException('الرقم القومي مسجل بالفعل');
+      throw new ConflictException(
+        'الرقم القومي مسجل بالفعل او الاسم مسجل بالفعل',
+      );
     }
 
     // Validation Rule #4: Check age (minimum 20 years)
@@ -64,9 +75,9 @@ export class EmployeeService {
     }
 
     // Check if department exists
-    const department = await this.departmentRepository.findOne(
-      { filter: { _id: createEmployeeDto.departmentId } },
-    );
+    const department = await this.departmentRepository.findOne({
+      filter: { _id: createEmployeeDto.departmentId },
+    });
 
     if (!department) {
       throw new BadRequestException('القسم غير موجود');
@@ -74,13 +85,15 @@ export class EmployeeService {
 
     // Validation Rule #1: Create employee successfully
     const employee = await this.employeeRepository.create({
-      data: [{
-        ...createEmployeeDto,
-        birthDate: new Date(createEmployeeDto.birthDate),
-        contractDate: new Date(createEmployeeDto.contractDate),
-        departmentId: new Types.ObjectId(createEmployeeDto.departmentId),
-        isActive: true,
-      }]
+      data: [
+        {
+          ...createEmployeeDto,
+          birthDate: new Date(createEmployeeDto.birthDate),
+          contractDate: new Date(createEmployeeDto.contractDate),
+          departmentId: new Types.ObjectId(createEmployeeDto.departmentId),
+          isActive: true,
+        },
+      ],
     });
 
     return {
@@ -89,14 +102,13 @@ export class EmployeeService {
     };
   }
 
-  /**
-   * Find All Employees - عرض كل الموظفين
-   */
   async findAll() {
-    const employees = await this.employeeRepository.find(
-
-      { filter: {}, options: { populate: [{ path: 'departmentId', select: 'name description' }] } },
-    );
+    const employees = await this.employeeRepository.find({
+      filter: {},
+      options: {
+        populate: [{ path: 'departmentId', select: 'name description' }],
+      },
+    });
 
     return {
       data: employees,
@@ -104,13 +116,11 @@ export class EmployeeService {
     };
   }
 
-  /**
-   * Find One Employee - عرض موظف واحد
-   */
   async findOne(id: string) {
-    const employees = await this.employeeRepository.find(
-      { filter: { _id: id }, options: { populate: [{ path: 'departmentId' }] } },
-    );
+    const employees = await this.employeeRepository.find({
+      filter: { _id: id },
+      options: { populate: [{ path: 'departmentId' }] },
+    });
 
     if (!employees || employees.length === 0) {
       throw new NotFoundException('الموظف غير موجود');
@@ -121,12 +131,10 @@ export class EmployeeService {
     };
   }
 
-  /**
-   * Update Employee - تعديل بيانات الموظف
-   * Validation Rule #8: Pop up for confirmation
-   */
   async update(id: Types.ObjectId, updateEmployeeDto: UpdateEmployeeDto) {
-    const existingEmployee = await this.employeeRepository.findOne({ filter: { _id: id } });
+    const existingEmployee = await this.employeeRepository.findOne({
+      filter: { _id: id },
+    });
 
     if (!existingEmployee) {
       throw new NotFoundException('الموظف غير موجود');
@@ -140,8 +148,8 @@ export class EmployeeService {
       const nationalIdExists = await this.employeeRepository.findOne({
         filter: {
           nationalId: updateEmployeeDto.nationalId,
-          _id: { $ne: id }
-        }
+          _id: { $ne: id },
+        },
       });
 
       if (nationalIdExists) {
@@ -169,9 +177,9 @@ export class EmployeeService {
 
     // Check if department exists if being updated
     if (updateEmployeeDto.departmentId) {
-      const department = await this.departmentRepository.findOne(
-        { filter: { _id: updateEmployeeDto.departmentId } }
-      );
+      const department = await this.departmentRepository.findOne({
+        filter: { _id: updateEmployeeDto.departmentId },
+      });
 
       if (!department) {
         throw new BadRequestException('القسم غير موجود');
@@ -194,9 +202,10 @@ export class EmployeeService {
       ) as any;
     }
 
-    const updatedEmployee = await this.employeeRepository.findOneAndUpdate(
-      { filter: { _id: id }, update: { $set: updateEmployeeDto } },
-    );
+    const updatedEmployee = await this.employeeRepository.findOneAndUpdate({
+      filter: { _id: id },
+      update: { $set: updateEmployeeDto },
+    });
 
     return {
       message: 'تم تعديل بيانات الموظف بنجاح',
@@ -204,12 +213,10 @@ export class EmployeeService {
     };
   }
 
-  /**
-   * Remove Employee - حذف موظف
-   * Validation Rule #9: Pop up for confirmation
-   */
   async remove(id: string) {
-    const employee = await this.employeeRepository.findOneAndDelete({ filter: { _id: id } });
+    const employee = await this.employeeRepository.findOneAndDelete({
+      filter: { _id: id },
+    });
 
     if (!employee) {
       throw new NotFoundException('الموظف غير موجود');
@@ -224,18 +231,16 @@ export class EmployeeService {
    * Search Employees - البحث عن الموظفين
    */
   async search(query: string) {
-    const employees = await this.employeeRepository.find(
-      {
-        filter: {
-          $or: [
-            { fullName: { $regex: query, $options: 'i' } },
-            { nationalId: { $regex: query, $options: 'i' } },
-            { phone: { $regex: query, $options: 'i' } },
-          ],
-        },
-        options: { populate: [{ path: 'departmentId', select: 'name' }] },
-      }
-    );
+    const employees = await this.employeeRepository.find({
+      filter: {
+        $or: [
+          { fullName: { $regex: query, $options: 'i' } },
+          { nationalId: { $regex: query, $options: 'i' } },
+          { phone: { $regex: query, $options: 'i' } },
+        ],
+      },
+      options: { populate: [{ path: 'departmentId', select: 'name' }] },
+    });
 
     return {
       data: employees,
@@ -247,9 +252,12 @@ export class EmployeeService {
    * Get Employees by Department - عرض موظفين حسب القسم
    */
   async getByDepartment(departmentId: string) {
-    const employees = await this.employeeRepository.find(
-      { filter: { _id: departmentId }, options: { populate: [{ path: 'departmentId', select: 'name description' }] } },
-    );
+    const employees = await this.employeeRepository.find({
+      filter: { _id: departmentId },
+      options: {
+        populate: [{ path: 'departmentId', select: 'name description' }],
+      },
+    });
 
     return {
       data: employees,
@@ -261,15 +269,18 @@ export class EmployeeService {
    * Toggle Employee Status - تفعيل/إلغاء تفعيل الموظف
    */
   async toggleStatus(id: Types.ObjectId) {
-    const employee = await this.employeeRepository.findOne({ filter: { _id: id } });
+    const employee = await this.employeeRepository.findOne({
+      filter: { _id: id },
+    });
 
     if (!employee) {
       throw new NotFoundException('الموظف غير موجود');
     }
 
-    const updatedEmployee = await this.employeeRepository.findOneAndUpdate(
-      { filter: { _id: id }, update: { $set: { isActive: !employee.isActive } } },
-    );
+    const updatedEmployee = await this.employeeRepository.findOneAndUpdate({
+      filter: { _id: id },
+      update: { $set: { isActive: !employee.isActive } },
+    });
 
     if (!updatedEmployee) {
       throw new NotFoundException('الموظف غير موجود');

@@ -26,9 +26,6 @@ export class AttendanceService {
     private readonly attendanceCalculator: AttendanceCalculatorHelper,
   ) {}
 
-  /**
-   * Create Attendance Record - إضافة سجل حضور
-   */
   async create(createAttendanceDto: CreateAttendanceDto) {
     // 1. التحقق من وجود الموظف
     const employee = await this.employeeRepository.findOne({
@@ -134,9 +131,6 @@ export class AttendanceService {
     };
   }
 
-  /**
-   * Find All Attendance Records - عرض كل سجلات الحضور
-   */
   async findAll() {
     const records = await this.attendanceRepository.find({
       filter: {},
@@ -156,9 +150,6 @@ export class AttendanceService {
     };
   }
 
-  /**
-   * Find One Attendance Record
-   */
   async findOne(id: string) {
     const records = await this.attendanceRepository.find({
       filter: { _id: id },
@@ -180,10 +171,6 @@ export class AttendanceService {
     };
   }
 
-  /**
-   * Update Attendance Record - تعديل سجل الحضور
-   * Validation Rule #4: Pop up for confirmation
-   */
   async update(id: string, updateAttendanceDto: UpdateAttendanceDto) {
     const existing = await this.attendanceRepository.findOne({
       filter: { _id: id },
@@ -238,10 +225,6 @@ export class AttendanceService {
     };
   }
 
-  /**
-   * Remove Attendance Record - حذف سجل الحضور
-   * Validation Rule #5: Pop up for confirmation
-   */
   async remove(id: string) {
     const attendance = await this.attendanceRepository.findOneAndDelete({
       filter: { _id: id },
@@ -256,10 +239,6 @@ export class AttendanceService {
     };
   }
 
-  /**
-   * Search Attendance Records - البحث في سجلات الحضور
-   * Validation Rules من PDF (نقطة 7)
-   */
   async search(searchDto: SearchAttendanceDto) {
     const filter: any = {};
 
@@ -343,9 +322,6 @@ export class AttendanceService {
     };
   }
 
-  /**
-   * Import Attendance from Excel
-   */
   async importFromExcel(file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('من فضلك قم برفع ملف Excel');
@@ -409,9 +385,6 @@ export class AttendanceService {
     }
   }
 
-  /**
-   * Export Attendance to Excel
-   */
   async exportToExcel(searchDto: SearchAttendanceDto) {
     const result = await this.search(searchDto);
     const records = result.data;
@@ -438,9 +411,6 @@ export class AttendanceService {
     return buffer;
   }
 
-  /**
-   * Get Attendance Statistics
-   */
   async getStatistics(employeeId: string, month: number, year: number) {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
@@ -452,7 +422,6 @@ export class AttendanceService {
       },
     });
 
-    // ✅ FIX: Type assertion
     const typedRecords = records as any[];
 
     const stats = {

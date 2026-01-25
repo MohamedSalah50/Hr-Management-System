@@ -24,5 +24,6 @@ export class CreateUserGroupDto implements IUserGroup {
   permissions: Types.ObjectId[];
 
   @IsArray({ message: 'المستخدمين يجب أن تكون قائمة' })
+  @IsOptional()
   userIds: Types.ObjectId[];
 }

@@ -13,11 +13,12 @@ import { IUser } from 'src/common';
 export class CreateUserDto implements Partial<IUser> {
   @IsString()
   @IsNotEmpty({ message: 'من فضلك ادخل الاسم بالكامل' })
+  @MinLength(7, { message: 'اسم المستخدم يجب ألا يقل عن 7 أحرف' })
   fullName: string;
 
   @IsString()
   @IsNotEmpty({ message: 'من فضلك ادخل اسم المستخدم' })
-  @MinLength(3, { message: 'اسم المستخدم يجب ألا يقل عن 3 أحرف' })
+  @MinLength(7, { message: 'اسم المستخدم يجب ألا يقل عن 7 أحرف' })
   userName: string;
 
   @IsEmail({}, { message: 'من فضلك ادخل بريد الكتروني صالح' })

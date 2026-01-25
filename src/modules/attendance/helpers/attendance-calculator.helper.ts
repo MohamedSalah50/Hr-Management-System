@@ -7,9 +7,7 @@ export class AttendanceCalculatorHelper {
         private readonly settingRepository: SettingRepository,
         private readonly employeeRepository: EmployeeRepository) { }
 
-    /**
-     * Calculate time difference in hours
-     */
+    
     private calculateTimeDifference(time1: string, time2: string): number {
         const [h1, m1] = time1.split(':').map(Number);
         const [h2, m2] = time2.split(':').map(Number);
@@ -20,9 +18,7 @@ export class AttendanceCalculatorHelper {
         return Math.abs(minutes2 - minutes1) / 60;
     }
 
-    /**
-     * Calculate late hours
-     */
+
     async calculateLateHours(
         employeeId: string,
         checkIn: string,
@@ -45,9 +41,7 @@ export class AttendanceCalculatorHelper {
         return 0;
     }
 
-    /**
-     * Calculate overtime hours
-     */
+    
     async calculateOvertimeHours(
         employeeId: string,
         checkOut: string,
@@ -70,9 +64,7 @@ export class AttendanceCalculatorHelper {
         return 0;
     }
 
-    /**
-     * Check if date is weekend
-     */
+   
     async isWeekend(date: Date): Promise<boolean> {
         const weekendSetting = await this.settingRepository.findOne({
             filter: { key: 'weekend_days' },

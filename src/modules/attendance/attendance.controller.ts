@@ -79,9 +79,9 @@ export class AttendanceController {
   }
 
   @Post('export')
-  async exportExcel(
-    @Body() searchDto: SearchAttendanceDto,
+  async exportToExcel(
     @Res() res: Response,
+    @Body() searchDto: SearchAttendanceDto, 
   ) {
     const buffer = await this.attendanceService.exportToExcel(searchDto);
 

@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { AttendanceEnum, IAttendance } from 'src/common';
 
-export class CreateAttendanceDto{
+export class CreateAttendanceDto {
   @IsMongoId({ message: 'معرف الموظف غير صالح' })
   @IsNotEmpty({ message: 'معرف الموظف مطلوب' })
   employeeId: string;
@@ -29,6 +29,9 @@ export class CreateAttendanceDto{
   checkIn?: string;
 
   // ✅ checkOut اختياري
+  @ValidateIf(
+    (o) => o.checkOut !== undefined && o.checkOut !== null && o.checkOut !== '',
+  )
   @IsString()
   @IsOptional()
   @Matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
