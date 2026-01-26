@@ -16,7 +16,7 @@ export class Role implements IRole {
   description: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Permission' }], default: [] })
-  permissions: Types.ObjectId[];
+  permissions?: Types.ObjectId[];
 }
 
 export type RoleDocument = HydratedDocument<Role>;

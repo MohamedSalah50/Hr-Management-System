@@ -19,5 +19,6 @@ import {
     PermissionRepository,
     UserRepository,
   ],
+  exports: [UserGroupRepository],
 })
 export class UserGroupModule {}
