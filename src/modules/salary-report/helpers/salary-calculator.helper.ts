@@ -1,3 +1,4 @@
+// salary-calculator.helper.ts
 import { Injectable } from '@nestjs/common';
 import {
   SettingRepository,
@@ -15,9 +16,6 @@ export class SalaryCalculatorHelper {
     private readonly attendanceRepository: AttendanceRepository,
   ) {}
 
-  /**
-   * Get working days in month (excluding weekends)
-   */
   async getWorkingDaysInMonth(month: number, year: number): Promise<number> {
     const daysInMonth = new Date(year, month, 0).getDate();
     const weekendSetting = await this.settingRepository.findOne({
@@ -42,9 +40,6 @@ export class SalaryCalculatorHelper {
     return workingDays;
   }
 
-  /**
-   * Get attendance statistics for employee in a month
-   */
   async getAttendanceStats(employeeId: string, month: number, year: number) {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
@@ -59,31 +54,20 @@ export class SalaryCalculatorHelper {
     const typedRecords = records as any[];
 
     const stats = {
-      // ✅ أيام الحضور
       daysPresent: typedRecords.filter(
         (r) => r.status === AttendanceEnum.Precent,
       ).length,
-
-      // ✅ أيام الغياب (فقط اللي هيتخصم)
       daysAbsent: typedRecords.filter((r) => r.status === AttendanceEnum.Abcent)
         .length,
-
-      // ✅ الإجازات الرسمية (مش هيتخصم)
       holidays: typedRecords.filter((r) => r.status === AttendanceEnum.Holiday)
         .length,
-
-      // ✅ الإجازات المرضية (مش هيتخصم)
       sickLeave: typedRecords.filter(
         (r) => r.status === AttendanceEnum.Sick_leave,
       ).length,
-
-      // مجموع ساعات الإضافي
       overtimeHours: typedRecords.reduce(
         (sum, r) => sum + (r.overtimeHours || 0),
         0,
       ),
-
-      // مجموع ساعات التأخير
       lateHours: typedRecords.reduce((sum, r) => sum + (r.lateHours || 0), 0),
     };
 
@@ -91,32 +75,75 @@ export class SalaryCalculatorHelper {
   }
 
   /**
-   * Calculate overtime amount
+   * Calculate overtime amount based on hours multiplier
+   * Formula: overtimeAmount = (baseSalary / (workingDays * hoursPerDay)) * overtimeHours * multiplier
    */
-  async calculateOvertimeAmount(overtimeHours: number): Promise<number> {
-    const overtimeRateSetting = await this.settingRepository.findOne({
-      filter: { key: 'overtime_rate_per_hour' },
+  async calculateOvertimeAmount(
+    baseSalary: number,
+    overtimeHours: number,
+    workingDays: number,
+  ): Promise<number> {
+    // Get settings
+    const overtimeMultiplierSetting = await this.settingRepository.findOne({
+      filter: { key: 'overtime_hours_multiplier' },
+    });
+    const workingHoursPerDaySetting = await this.settingRepository.findOne({
+      filter: { key: 'working_hours_per_day' },
     });
 
-    const overtimeRate = overtimeRateSetting?.value || 50;
-    return Number((overtimeHours * overtimeRate).toFixed(2));
+    const overtimeMultiplier = overtimeMultiplierSetting?.value || 1.5; // Default 1.5
+    const hoursPerDay = workingHoursPerDaySetting?.value || 8; // Default 8 hours
+
+    // Calculate hourly rate
+    const hourlyRate = baseSalary / (workingDays * hoursPerDay);
+
+    // Calculate overtime amount
+    const overtimeAmount = hourlyRate * overtimeHours * overtimeMultiplier;
+
+    console.log('🧮 Overtime Calculation:', {
+      baseSalary,
+      workingDays,
+      hoursPerDay,
+      overtimeHours,
+      overtimeMultiplier,
+      hourlyRate: hourlyRate.toFixed(2),
+      overtimeAmount: overtimeAmount.toFixed(2),
+    });
+
+    return Number(overtimeAmount.toFixed(2));
   }
 
   /**
-   * Calculate deduction amount
+   * Calculate deduction amount based on hours multiplier
+   * Formula: deductionAmount = (baseSalary / (workingDays * hoursPerDay)) * lateHours * multiplier
    */
-  async calculateDeductionAmount(lateHours: number): Promise<number> {
-    const deductionRateSetting = await this.settingRepository.findOne({
-      filter: { key: 'deduction_rate_per_hour' },
+  async calculateDeductionAmount(
+    baseSalary: number,
+    lateHours: number,
+    workingDays: number,
+  ): Promise<number> {
+    // Get settings
+    const deductionMultiplierSetting = await this.settingRepository.findOne({
+      filter: { key: 'deduction_hours_multiplier' },
+    });
+    const workingHoursPerDaySetting = await this.settingRepository.findOne({
+      filter: { key: 'working_hours_per_day' },
     });
 
-    const deductionRate = deductionRateSetting?.value || 30;
-    return Number((lateHours * deductionRate).toFixed(2));
+    const deductionMultiplier = deductionMultiplierSetting?.value || 2; // Default 2
+    const hoursPerDay = workingHoursPerDaySetting?.value || 8; // Default 8 hours
+
+    // Calculate hourly rate
+    const hourlyRate = baseSalary / (workingDays * hoursPerDay);
+
+    // Calculate deduction amount
+    const deductionAmount = hourlyRate * lateHours * deductionMultiplier;
+
+    return Number(deductionAmount.toFixed(2));
   }
 
   /**
    * Calculate net salary
-   * NOTE: This is a BASIC calculation pending business logic clarification
    */
   async calculateNetSalary(
     baseSalary: number,
@@ -128,14 +155,13 @@ export class SalaryCalculatorHelper {
     holidays: number,
     sickLeave: number,
   ): Promise<number> {
-    // 1. حساب الراتب اليومي
+    // 1. Calculate daily salary
     const dailySalary = baseSalary / workingDays;
 
-    // 2. حساب عقوبة الغياب
-    // ✅ فقط daysAbsent يُخصم، holidays و sickLeave لا يُخصموا
+    // 2. Calculate absence penalty
     const absentPenalty = dailySalary * daysAbsent;
 
-    // 3. حساب صافي الراتب
+    // 3. Calculate net salary
     const netSalary =
       baseSalary + overtimeAmount - deductionAmount - absentPenalty;
 

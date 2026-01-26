@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { GenerateReportDto } from './dto/generate-report.dto';
 import { EmployeeRepository, SalaryReportRepository } from 'src/db';
 import { SalaryCalculatorHelper } from './helpers/salary-calculator.helper';
@@ -11,7 +16,7 @@ export class SalaryReportService {
     private readonly salaryReportRepository: SalaryReportRepository,
     private readonly employeeRepository: EmployeeRepository,
     private readonly salaryCalculator: SalaryCalculatorHelper,
-  ) { }
+  ) {}
 
   /**
    * Generate Salary Report for Single Employee
@@ -19,12 +24,11 @@ export class SalaryReportService {
   async generateReport(generateReportDto: GenerateReportDto) {
     const { employeeId, month, year } = generateReportDto;
 
-    // Validation Rule #2: Year validation
+    // Validation
     if (year < 2008) {
       throw new BadRequestException('من فضلك اختر سنة صحيحه');
     }
 
-    // ✅ FIX: Check if employeeId exists
     if (!employeeId) {
       throw new BadRequestException('معرف الموظف مطلوب');
     }
@@ -58,23 +62,31 @@ export class SalaryReportService {
       year,
     );
 
-    // ✅ FIX: Type assertion for overtime and late hours
-    const overtimeAmount = await this.salaryCalculator.calculateOvertimeAmount(
-      Number(attendanceStats.overtimeHours),
-    );
-    const deductionAmount = await this.salaryCalculator.calculateDeductionAmount(
-      Number(attendanceStats.lateHours),
-    );
-
     // Get working days
     const workingDays = await this.salaryCalculator.getWorkingDaysInMonth(
       month,
       year,
     );
 
+    const baseSalary = (employee as any).baseSalary;
+
+    // ✅ Calculate amounts with new formula (passing baseSalary and workingDays)
+    const overtimeAmount = await this.salaryCalculator.calculateOvertimeAmount(
+      baseSalary,
+      Number(attendanceStats.overtimeHours),
+      workingDays,
+    );
+
+    const deductionAmount =
+      await this.salaryCalculator.calculateDeductionAmount(
+        baseSalary,
+        Number(attendanceStats.lateHours),
+        workingDays,
+      );
+
     // Calculate net salary
     const netSalary = await this.salaryCalculator.calculateNetSalary(
-      (employee as any).baseSalary,
+      baseSalary,
       overtimeAmount,
       deductionAmount,
       attendanceStats.daysPresent,
@@ -84,14 +96,14 @@ export class SalaryReportService {
       attendanceStats.sickLeave,
     );
 
-    // ✅ FIX: Get first element from create result
+    // Create report
     const [report] = await this.salaryReportRepository.create({
       data: [
         {
           employeeId: new Types.ObjectId(employeeId),
           month,
           year,
-          baseSalary: (employee as any).baseSalary,
+          baseSalary,
           daysPresent: attendanceStats.daysPresent,
           daysAbsent: attendanceStats.daysAbsent,
           holidays: attendanceStats.holidays,
@@ -176,9 +188,19 @@ export class SalaryReportService {
    * Find All Salary Reports
    */
   async findAll() {
-    const reports = await this.salaryReportRepository.find(
-      { filter: {}, options: { populate: [{ path: 'employeeId', select: 'fullName nationalId', populate: { path: 'departmentId', select: 'name' } }], sort: { year: -1, month: -1 } } },
-    );
+    const reports = await this.salaryReportRepository.find({
+      filter: {},
+      options: {
+        populate: [
+          {
+            path: 'employeeId',
+            select: 'fullName nationalId',
+            populate: { path: 'departmentId', select: 'name' },
+          },
+        ],
+        sort: { year: -1, month: -1 },
+      },
+    });
 
     return {
       data: reports,
@@ -190,9 +212,16 @@ export class SalaryReportService {
    * Find One Salary Report
    */
   async findOne(id: string) {
-    const reports = await this.salaryReportRepository.find(
-      { filter: { _id: id }, options: { populate: { path: 'employeeId', select: 'fullName nationalId', populate: { path: 'departmentId', select: 'name' } } } },
-    );
+    const reports = await this.salaryReportRepository.find({
+      filter: { _id: id },
+      options: {
+        populate: {
+          path: 'employeeId',
+          select: 'fullName nationalId',
+          populate: { path: 'departmentId', select: 'name' },
+        },
+      },
+    });
 
     if (!reports || reports.length === 0) {
       throw new NotFoundException('التقرير غير موجود');
@@ -211,11 +240,9 @@ export class SalaryReportService {
 
     // Search by employee
     if (searchDto.employeeId) {
-      const employee = await this.employeeRepository.findOne(
-        {
-          filter: { _id: searchDto.employeeId },
-        }
-      );
+      const employee = await this.employeeRepository.findOne({
+        filter: { _id: searchDto.employeeId },
+      });
 
       if (!employee) {
         // Validation Rule #1: Invalid employee
@@ -239,15 +266,19 @@ export class SalaryReportService {
       filter.year = searchDto.year;
     }
 
-    const reports = await this.salaryReportRepository.find(
-      {
-        filter,
-        options: {
-          populate: [{ path: 'employeeId', select: 'fullName nationalId', populate: { path: 'departmentId', select: 'name' } }],
-          sort: { year: -1, month: -1 }
-        }
-      }
-    );
+    const reports = await this.salaryReportRepository.find({
+      filter,
+      options: {
+        populate: [
+          {
+            path: 'employeeId',
+            select: 'fullName nationalId',
+            populate: { path: 'departmentId', select: 'name' },
+          },
+        ],
+        sort: { year: -1, month: -1 },
+      },
+    });
 
     return {
       data: reports,
@@ -259,7 +290,9 @@ export class SalaryReportService {
    * Delete Salary Report
    */
   async remove(id: string) {
-    const report = await this.salaryReportRepository.findOneAndDelete({ filter: { _id: id } });
+    const report = await this.salaryReportRepository.findOneAndDelete({
+      filter: { _id: id },
+    });
 
     if (!report) {
       throw new NotFoundException('التقرير غير موجود');
@@ -282,13 +315,13 @@ export class SalaryReportService {
         employeeId: new Types.ObjectId(employeeId),
         month,
         year,
-      }
+      },
     });
 
     if (existingReport) {
-      await this.salaryReportRepository.findOneAndDelete(
-        { filter: { _id: existingReport._id.toString() } },
-      );
+      await this.salaryReportRepository.findOneAndDelete({
+        filter: { _id: existingReport._id.toString() },
+      });
     }
 
     // Generate new report
@@ -309,10 +342,19 @@ export class SalaryReportService {
     const summary = {
       totalEmployees: typedReports.length,
       totalBaseSalary: typedReports.reduce((sum, r) => sum + r.baseSalary, 0),
-      totalOvertimeAmount: typedReports.reduce((sum, r) => sum + r.overtimeAmount, 0),
-      totalDeductionAmount: typedReports.reduce((sum, r) => sum + r.deductionAmount, 0),
+      totalOvertimeAmount: typedReports.reduce(
+        (sum, r) => sum + r.overtimeAmount,
+        0,
+      ),
+      totalDeductionAmount: typedReports.reduce(
+        (sum, r) => sum + r.deductionAmount,
+        0,
+      ),
       totalNetSalary: typedReports.reduce((sum, r) => sum + r.netSalary, 0),
-      totalOvertimeHours: typedReports.reduce((sum, r) => sum + r.overtimeHours, 0),
+      totalOvertimeHours: typedReports.reduce(
+        (sum, r) => sum + r.overtimeHours,
+        0,
+      ),
       totalLateHours: typedReports.reduce((sum, r) => sum + r.lateHours, 0),
       totalDaysPresent: typedReports.reduce((sum, r) => sum + r.daysPresent, 0),
       totalDaysAbsent: typedReports.reduce((sum, r) => sum + r.daysAbsent, 0),
@@ -355,4 +397,3 @@ export class SalaryReportService {
     };
   }
 }
- 

@@ -90,77 +90,81 @@ export class SettingsService {
     };
   }
 
-  // settings.service.ts - Improved Version
-
-  /**
-   * Save Overtime & Deduction Settings
-   * Validation Rules من SRS (Section 5)
-   */
   async saveOvertimeDeductionSettings(dto: OvertimeDeductionSettingsDto) {
-    // Validation Rule #2: Check if all fields are filled
+    // Validation
     if (
-      dto.overtimeRatePerHour === undefined ||
-      dto.overtimeRatePerHour === null ||
-      dto.deductionRatePerHour === undefined ||
-      dto.deductionRatePerHour === null
+      dto.overtimeHoursMultiplier === undefined ||
+      dto.overtimeHoursMultiplier === null ||
+      dto.deductionHoursMultiplier === undefined ||
+      dto.deductionHoursMultiplier === null ||
+      dto.workingHoursPerDay === undefined ||
+      dto.workingHoursPerDay === null
     ) {
       throw new BadRequestException('من فضلك ادخال بيانات الحقل');
     }
 
-    // Additional validation: rates should be positive
-    if (dto.overtimeRatePerHour < 0 || dto.deductionRatePerHour < 0) {
-      throw new BadRequestException('يجب أن تكون القيم موجبة');
+    if (
+      dto.overtimeHoursMultiplier < 0 ||
+      dto.deductionHoursMultiplier < 0 ||
+      dto.workingHoursPerDay <= 0
+    ) {
+      throw new BadRequestException('يجب أن تكون القيم صحيحة');
     }
 
-    // Save overtime rate
+    // Save overtime multiplier
     await this.upsert({
-      key: 'overtime_rate_per_hour',
-      value: dto.overtimeRatePerHour,
+      key: 'overtime_hours_multiplier',
+      value: dto.overtimeHoursMultiplier,
       dataType: SettingsEnum.Number,
-      description: 'معدل الإضافة للساعة الواحدة',
+      description: 'معامل ضرب ساعات الإضافي',
     });
 
-    // Save deduction rate
+    // Save deduction multiplier
     await this.upsert({
-      key: 'deduction_rate_per_hour',
-      value: dto.deductionRatePerHour,
+      key: 'deduction_hours_multiplier',
+      value: dto.deductionHoursMultiplier,
       dataType: SettingsEnum.Number,
-      description: 'معدل الخصم للساعة الواحدة',
+      description: 'معامل ضرب ساعات التأخير للخصم',
     });
 
-    // Validation Rule #1: Success message (تم الحفظ بنجاح)
+    // Save working hours per day
+    await this.upsert({
+      key: 'working_hours_per_day',
+      value: dto.workingHoursPerDay,
+      dataType: SettingsEnum.Number,
+      description: 'عدد ساعات العمل في اليوم',
+    });
+
     return {
       message: 'تم الحفظ بنجاح',
       data: {
-        overtimeRatePerHour: dto.overtimeRatePerHour,
-        deductionRatePerHour: dto.deductionRatePerHour,
+        overtimeHoursMultiplier: dto.overtimeHoursMultiplier,
+        deductionHoursMultiplier: dto.deductionHoursMultiplier,
+        workingHoursPerDay: dto.workingHoursPerDay,
       },
     };
   }
 
-  /**
-   * Get Overtime & Deduction Settings
-   */
   async getOvertimeDeductionSettings() {
-    const overtimeRate = await this.settingRepository.findOne({
-      filter: { key: 'overtime_rate_per_hour' },
+    const overtimeMultiplier = await this.settingRepository.findOne({
+      filter: { key: 'overtime_hours_multiplier' },
     });
-    const deductionRate = await this.settingRepository.findOne({
-      filter: { key: 'deduction_rate_per_hour' },
+    const deductionMultiplier = await this.settingRepository.findOne({
+      filter: { key: 'deduction_hours_multiplier' },
+    });
+    const workingHoursPerDay = await this.settingRepository.findOne({
+      filter: { key: 'working_hours_per_day' },
     });
 
     return {
       data: {
-        overtimeRatePerHour: overtimeRate?.value || 0,
-        deductionRatePerHour: deductionRate?.value || 0,
+        overtimeHoursMultiplier: overtimeMultiplier?.value || 1.5,
+        deductionHoursMultiplier: deductionMultiplier?.value || 2,
+        workingHoursPerDay: workingHoursPerDay?.value || 8,
       },
     };
   }
 
-  /**
-   * Save Weekend Settings
-   * يقوم HR بتحديد أيام الإجازة (الجمعة والسبت أو الجمعة فقط)
-   */
   async saveWeekendSettings(dto: WeekendSettingsDto) {
     // Validation Rule #2: Check if weekend days are provided
     if (!dto.weekendDays || dto.weekendDays.length === 0) {
