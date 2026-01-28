@@ -23,6 +23,18 @@ export type DepartmentDocument = HydratedDocument<Department>;
 
 export const DepartmentSchema = SchemaFactory.createForClass(Department);
 
+DepartmentSchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+  next();
+})
+
 export const DepartmentModel = MongooseModule.forFeature([
   {
     name: Department.name,

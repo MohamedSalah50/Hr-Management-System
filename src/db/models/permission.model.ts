@@ -20,7 +20,7 @@ export class Permission implements IPermission {
 
   @Prop({ required: false, minlength: 15, maxlength: 500 })
   description: string;
-  
+
   @Prop({ required: false, default: false })
   freezedAt: boolean;
 }
@@ -28,6 +28,18 @@ export class Permission implements IPermission {
 export type PermissionDocument = HydratedDocument<Permission>;
 
 export const PermissionSchema = SchemaFactory.createForClass(Permission);
+
+PermissionSchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+  next();
+})
 
 export const PermissionModel = MongooseModule.forFeature([
   {

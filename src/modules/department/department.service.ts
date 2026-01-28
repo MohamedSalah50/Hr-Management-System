@@ -31,7 +31,7 @@ export class DepartmentService {
   }
 
   async findAll() {
-    const departments = await this.departmentRepository.find({ filter: { freezedAt: { $exists: false } } });
+    const departments = await this.departmentRepository.find({ filter: {} });
     return {
       data: departments,
       total: departments.length,
@@ -40,7 +40,7 @@ export class DepartmentService {
 
   async findOne(id: Types.ObjectId) {
     const department = await this.departmentRepository.findOne({
-      filter: { _id: id, freezedAt: { $exists: false } },
+      filter: { _id: id },
     });
 
     if (!department) {

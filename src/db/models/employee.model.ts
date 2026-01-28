@@ -56,6 +56,18 @@ export type EmployeeDocument = HydratedDocument<Employee>;
 
 export const EmployeeSchema = SchemaFactory.createForClass(Employee);
 
+EmployeeSchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+  next();
+})
+
 EmployeeSchema.index({ nationalId: 1, departmentId: 1 });
 
 export const EmployeeModel = MongooseModule.forFeature([

@@ -29,6 +29,18 @@ export type OfficialHolidayDocument = HydratedDocument<OfficialHoliday>;
 
 export const OfficialHolidaySchema = SchemaFactory.createForClass(OfficialHoliday);
 
+OfficialHolidaySchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+  next();
+})
+
 OfficialHolidaySchema.index({ year: 1, date: 1 });
 
 export const OfficialHolidayModel = MongooseModule.forFeature([

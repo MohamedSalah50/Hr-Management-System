@@ -27,6 +27,18 @@ export type UserGroupDocument = HydratedDocument<UserGroup>;
 export const UserGroupSchema = SchemaFactory.createForClass(UserGroup);
 
 
+UserGroupSchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+  next();
+})
+
 export const UserGroupModel = MongooseModule.forFeature([
   {
     name: UserGroup.name,

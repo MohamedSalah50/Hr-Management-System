@@ -54,6 +54,18 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
+UserSchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+  next();
+})
+
 export const UserModel = MongooseModule.forFeature([
   {
     name: User.name,

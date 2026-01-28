@@ -26,6 +26,18 @@ export type RoleDocument = HydratedDocument<Role>;
 
 export const RoleSchema = SchemaFactory.createForClass(Role);
 
+RoleSchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+  next();
+})
+
 export const RoleModel = MongooseModule.forFeature([
   {
     name: Role.name,

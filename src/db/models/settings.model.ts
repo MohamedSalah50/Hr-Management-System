@@ -34,6 +34,18 @@ export type SettingDocument = HydratedDocument<Setting>;
 export const SettingSchema = SchemaFactory.createForClass(Setting);
 
 
+SettingSchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+})
+
+
 export const SettingModel = MongooseModule.forFeature([
   {
     name: Setting.name,

@@ -56,7 +56,19 @@ export type SalaryReportDocument = HydratedDocument<SalaryReport>;
 
 export const SalaryReportSchema = SchemaFactory.createForClass(SalaryReport);
 
-// Create compound unique index
+
+SalaryReportSchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+})
+
+
 SalaryReportSchema.index({ employeeId: 1, month: 1, year: 1 }, { unique: true });
 
 export const SalaryReportModel = MongooseModule.forFeature([

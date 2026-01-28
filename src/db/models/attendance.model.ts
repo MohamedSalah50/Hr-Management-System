@@ -45,6 +45,18 @@ export type AttendanceDocument = HydratedDocument<Attendance>;
 
 export const AttendanceSchema = SchemaFactory.createForClass(Attendance);
 
+AttendanceSchema.pre(['findOne', 'find'], function (next) {
+  const query = this.getQuery();
+
+  if (query.paranoid === false) {
+    this.setQuery({ ...query })
+  } else {
+    this.setQuery({ ...query, freezedAt: { $exists: false } })
+
+  }
+  next();
+})
+
 AttendanceSchema.index({ employeeId: 1, date: 1 }, { unique: true });
 
 export const AttendanceModel = MongooseModule.forFeature([
