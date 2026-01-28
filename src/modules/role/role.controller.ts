@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { RoleService } from './role.service';

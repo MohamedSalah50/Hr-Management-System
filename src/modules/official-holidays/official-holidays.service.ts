@@ -107,6 +107,7 @@ export class OfficialHolidaysService {
 
 
   async softDelete(id: string) {
+    
 
     const holiday = await this.officialHolidayRepository.findOneAndUpdate({
       filter: { _id: id, freezedAt: { $exists: false } },

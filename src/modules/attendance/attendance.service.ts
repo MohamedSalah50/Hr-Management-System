@@ -222,6 +222,7 @@ export class AttendanceService {
   }
 
   async softDelete(id: string) {
+
     const attendance = await this.attendanceRepository.findOneAndUpdate({
       filter: { _id: id, freezedAt: { $exists: false } },
       update: { freezedAt: true }

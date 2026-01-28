@@ -10,16 +10,21 @@ import { compareHash } from 'src/utils';
 import { LoginDto } from './dto/login.dto';
 import { TokenService } from 'src/utils/security/token.security';
 import { IAuthRequest, LoginCredentialsResponse } from 'src/common';
+import { isValidObjectId } from 'mongoose';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly tokenService: TokenService,
-  ) {}
+  ) { }
 
   async signup(dto: signupDto): Promise<{ message: string }> {
-    const { fullName, userName, email, password } = dto;
+    const { fullName, userName, email, password, userGroupId } = dto;
+
+    if (!isValidObjectId(userGroupId)) {
+      throw new BadRequestException('invalid user group id');
+    }
 
     const existingUser = await this.userRepository.findOne({
       filter: { email },
@@ -37,6 +42,7 @@ export class AuthService {
             userName,
             email,
             password,
+            userGroupId
           },
         ],
       })) || [];
@@ -46,7 +52,6 @@ export class AuthService {
         'fail to signup this user, please try again later',
       );
 
-    // await this.createConfirmEmailOtp(user._id);
 
     return {
       message: 'signup successfull',

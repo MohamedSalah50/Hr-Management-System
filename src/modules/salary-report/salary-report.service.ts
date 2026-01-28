@@ -18,7 +18,7 @@ export class SalaryReportService {
     private readonly salaryCalculator: SalaryCalculatorHelper,
   ) { }
 
-  
+
   async generateReport(generateReportDto: GenerateReportDto) {
     const { employeeId, month, year } = generateReportDto;
 
@@ -121,7 +121,7 @@ export class SalaryReportService {
     };
   }
 
-  
+
   async generateReportsForAll(month: number, year: number) {
     // Validation
     if (year < 2008) {
@@ -180,8 +180,9 @@ export class SalaryReportService {
     };
   }
 
-  
+
   async findAll() {
+    
     const reports = await this.salaryReportRepository.find({
       filter: {},
       options: {

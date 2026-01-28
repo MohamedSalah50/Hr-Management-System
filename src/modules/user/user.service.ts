@@ -201,7 +201,7 @@ export class UserService {
 
   async softDelete(id: Types.ObjectId) {
     const user = await this.userRepository.findOneAndUpdate({
-      filter: { _id: id }, update: { freezedAt: true }
+      filter: { _id: id, freezedAt: { $exists: false } }, update: { freezedAt: true }
     });
 
     if (!user) {
@@ -239,7 +239,7 @@ export class UserService {
     };
   }
 
-  
+
   async changePassword(
     userId: Types.ObjectId,
     changePasswordDto: ChangePasswordDto,
@@ -269,7 +269,7 @@ export class UserService {
     };
   }
 
-  
+
   async search(query: string) {
     const users = await this.userRepository.find({
       filter: {
@@ -292,7 +292,7 @@ export class UserService {
     };
   }
 
-  
+
   async getUsersByGroup(userGroupId: string) {
     const users = await this.userRepository.find({
       filter: { userGroupId },

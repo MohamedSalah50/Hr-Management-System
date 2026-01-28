@@ -1,6 +1,7 @@
 import {
   IsDateString,
   IsEmail,
+  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -8,6 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { Types } from 'mongoose';
 import { GenderEnum, IsAdult, IsMatched, IUser } from 'src/common';
 
 export class signupDto implements Partial<IUser> {
@@ -46,7 +48,8 @@ export class signupDto implements Partial<IUser> {
   @IsOptional()
   gender?: GenderEnum;
 
-  //   @IsDateString({}, { message: 'DOB must be in format YYYY-MM-DD' })
-  //   @IsAdult({ message: 'age must be greater than 18' })
-  //   DOB: Date;
+  @IsMongoId({ message: ' المجموعة غير صالحه' })
+  @IsNotEmpty({ message: 'من فضلك قم بتحديد المجموعة قبل الاضافة' })
+  userGroupId: Types.ObjectId;
+
 }

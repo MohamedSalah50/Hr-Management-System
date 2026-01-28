@@ -196,7 +196,7 @@ export class EmployeeService {
 
   async softDelete(id: string) {
     const employee = await this.employeeRepository.findOneAndUpdate({
-      filter: { _id: id, freezedAt: { $exists: false } },
+      filter: { _id: id , freezedAt: { $exists: false } },
       update: { freezedAt: true }
 
     });

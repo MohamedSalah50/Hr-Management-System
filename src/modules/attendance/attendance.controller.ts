@@ -67,7 +67,7 @@ export class AttendanceController {
     return this.attendanceService.update(id, updateAttendanceDto);
   }
 
-  @Patch(':id')
+  @Patch(':id/soft-delete')
   remove(@Param('id') id: string) {
     return this.attendanceService.softDelete(id);
   }

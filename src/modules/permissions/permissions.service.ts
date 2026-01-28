@@ -45,8 +45,7 @@ export class PermissionsService {
     if (!isValidObjectId(id)) {
       throw new NotFoundException('id غير صالح');
     }
-    // const permission = await this.permissionRepository.findOne({ filter: { _id: new Types.ObjectId(id) } });
-    const permission = await this.permissionRepository.findOne({ filter: { _id: id, freezedAt: { $exists: false } } });
+    const permission = await this.permissionRepository.findOne({ filter: { _id: id } });
 
 
     if (!permission) {

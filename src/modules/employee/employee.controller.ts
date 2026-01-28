@@ -52,7 +52,7 @@ export class EmployeeController {
     return this.employeeService.update(id, updateEmployeeDto);
   }
 
-  @Patch(':id')
+  @Patch(':id/soft-delete')
   remove(@Param('id') id: string) {
     return this.employeeService.softDelete(id);
   }
