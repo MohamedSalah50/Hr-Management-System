@@ -4,4 +4,6 @@ export interface IRole {
     name: string;
     description?: string;
     permissions?: Types.ObjectId[];
+    freezedAt?: boolean;
+
 }

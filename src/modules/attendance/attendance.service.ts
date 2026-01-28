@@ -24,10 +24,9 @@ export class AttendanceService {
     private readonly employeeRepository: EmployeeRepository,
     private readonly officialHolidayRepository: OfficialHolidayRepository,
     private readonly attendanceCalculator: AttendanceCalculatorHelper,
-  ) {}
+  ) { }
 
   async create(createAttendanceDto: CreateAttendanceDto) {
-    // 1. التحقق من وجود الموظف
     const employee = await this.employeeRepository.findOne({
       filter: { _id: createAttendanceDto.employeeId },
     });
@@ -36,7 +35,6 @@ export class AttendanceService {
       throw new NotFoundException('الموظف غير موجود');
     }
 
-    // 2. التحقق من عدم تكرار السجل
     const existingAttendance = await this.attendanceRepository.findOne({
       filter: {
         employeeId: new Types.ObjectId(createAttendanceDto.employeeId),
@@ -109,7 +107,6 @@ export class AttendanceService {
       }
     }
 
-    // 5. حفظ السجل
     const attendance = await this.attendanceRepository.create({
       data: [
         {
@@ -180,7 +177,6 @@ export class AttendanceService {
       throw new NotFoundException('سجل الحضور غير موجود');
     }
 
-    // Recalculate late and overtime if times are updated
     let lateHours = existing.lateHours;
     let overtimeHours = existing.overtimeHours;
 
@@ -225,9 +221,10 @@ export class AttendanceService {
     };
   }
 
-  async remove(id: string) {
-    const attendance = await this.attendanceRepository.findOneAndDelete({
-      filter: { _id: id },
+  async softDelete(id: string) {
+    const attendance = await this.attendanceRepository.findOneAndUpdate({
+      filter: { _id: id, freezedAt: { $exists: false } },
+      update: { freezedAt: true }
     });
 
     if (!attendance) {

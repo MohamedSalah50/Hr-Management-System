@@ -17,7 +17,7 @@ import { UpdateDepartmentDto } from './dto/update-department.dto';
 @auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('departments')
 export class DepartmentController {
-  constructor(private readonly departmentService: DepartmentService) {}
+  constructor(private readonly departmentService: DepartmentService) { }
 
   @Post()
   create(@Body() createDepartmentDto: CreateDepartmentDto) {
@@ -42,8 +42,8 @@ export class DepartmentController {
     return this.departmentService.update(id, updateDepartmentDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: Types.ObjectId) {
-    return this.departmentService.remove(id);
+  @Patch(':id/soft-delete')
+  softdelete(@Param('id') id: Types.ObjectId) {
+    return this.departmentService.softDelete(id);
   }
 }

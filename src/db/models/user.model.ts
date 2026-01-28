@@ -37,15 +37,15 @@ export class User implements IUser {
   @Prop({ enum: RoleEnum, default: RoleEnum.user })
   role: RoleEnum;
 
-  // تأكد من الـ Schema
-@Prop({ type: Types.ObjectId, ref: 'UserGroup', required: true })
-userGroupId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'UserGroup', required: true })
+  userGroupId: Types.ObjectId;
+
+  @Prop({ required: false, default: false })
+  freezedAt?: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-UserSchema.index({ email: 1 });
-UserSchema.index({ username: 1 });
 
 UserSchema.pre('save', async function (next) {
   if (this.isModified('password')) {

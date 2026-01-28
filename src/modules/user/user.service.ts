@@ -17,7 +17,7 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly userGroupRepository: UserGroupRepository,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto) {
     // Validation Rule #1: Check if all data provided
@@ -108,9 +108,6 @@ export class UserService {
     };
   }
 
-  /**
-   * Find One User - عرض مستخدم واحد
-   */
   async findOne(id: string) {
     const user = await this.userRepository.findOne({
       filter: { _id: id },
@@ -129,14 +126,8 @@ export class UserService {
     };
   }
 
-  /**
-   * Update User - تعديل بيانات المستخدم
-   * Validation Rule #8: Pop up for confirmation
-   */
-  // user.service.ts - update method (FIXED)
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    // Check if user exists
     const existingUser = await this.userRepository.findOne({
       filter: { _id: id },
     });
@@ -145,7 +136,6 @@ export class UserService {
       throw new NotFoundException('المستخدم غير موجود');
     }
 
-    // Check if username is being changed and already exists
     if (
       updateUserDto.userName &&
       updateUserDto.userName !== existingUser.userName
@@ -162,7 +152,6 @@ export class UserService {
       }
     }
 
-    // Check if email is being changed and already exists
     if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
       const emailExists = await this.userRepository.findOne({
         filter: {
@@ -176,7 +165,6 @@ export class UserService {
       }
     }
 
-    // Check if group exists if being updated
     if (updateUserDto.userGroupId) {
       const userGroup = await this.userGroupRepository.findOne({
         filter: { _id: updateUserDto.userGroupId },
@@ -187,25 +175,21 @@ export class UserService {
       }
     }
 
-    // Prepare update data
     const updateData: any = { ...updateUserDto };
 
-    // Convert userGroupId to ObjectId if provided
     if (updateUserDto.userGroupId) {
       updateData.userGroupId = new Types.ObjectId(updateUserDto.userGroupId);
     }
 
-    // Update user
     const updatedUser = await this.userRepository.findOneAndUpdate({
       filter: { _id: id },
-      update: updateData, // ✅ FIXED: كان { updateUserDto } غلط
+      update: updateData,
     });
 
     if (!updatedUser) {
       throw new NotFoundException('المستخدم غير موجود');
     }
 
-    // Remove password from response
     const { password, ...userWithoutPassword } = updatedUser.toObject();
 
     return {
@@ -214,12 +198,11 @@ export class UserService {
     };
   }
 
-  /**
-   * Remove User - حذف مستخدم
-   * Validation Rule #9: Pop up for confirmation
-   */
-  async remove(id: Types.ObjectId) {
-    const user = await this.userRepository.deleteOne({ filter: { _id: id } });
+
+  async softDelete(id: Types.ObjectId) {
+    const user = await this.userRepository.findOneAndUpdate({
+      filter: { _id: id }, update: { freezedAt: true }
+    });
 
     if (!user) {
       throw new NotFoundException('المستخدم غير موجود');
@@ -230,9 +213,7 @@ export class UserService {
     };
   }
 
-  /**
-   * Toggle User Status - تفعيل/إلغاء تفعيل المستخدم
-   */
+
   async toggleStatus(id: string) {
     const user = await this.userRepository.findOne({ filter: { _id: id } });
 
@@ -258,9 +239,7 @@ export class UserService {
     };
   }
 
-  /**
-   * Change Password - تغيير كلمة المرور
-   */
+  
   async changePassword(
     userId: Types.ObjectId,
     changePasswordDto: ChangePasswordDto,
@@ -290,9 +269,7 @@ export class UserService {
     };
   }
 
-  /**
-   * Search Users - البحث عن المستخدمين
-   */
+  
   async search(query: string) {
     const users = await this.userRepository.find({
       filter: {
@@ -315,9 +292,7 @@ export class UserService {
     };
   }
 
-  /**
-   * Get Users by Role - عرض المستخدمين حسب المجموعة
-   */
+  
   async getUsersByGroup(userGroupId: string) {
     const users = await this.userRepository.find({
       filter: { userGroupId },

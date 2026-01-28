@@ -24,13 +24,15 @@ export class Setting implements ISettings {
 
   @Prop()
   description: string;
+
+  @Prop({ required: false, default: false })
+  freezedAt: boolean;
 }
 
 export type SettingDocument = HydratedDocument<Setting>;
 
 export const SettingSchema = SchemaFactory.createForClass(Setting);
 
-SettingSchema.index({ key: 1 });
 
 export const SettingModel = MongooseModule.forFeature([
   {

@@ -37,16 +37,19 @@ export class Employee implements IEmployee {
   baseSalary: number;
 
   @Prop({ required: true })
-  checkInTime: string; // format: "09:00"
+  checkInTime: string;
 
   @Prop({ required: true })
-  checkOutTime: string; // format: "17:00"
+  checkOutTime: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Department' })
   departmentId: Types.ObjectId;
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ required: false, default: false })
+  freezedAt?: boolean;
 }
 
 export type EmployeeDocument = HydratedDocument<Employee>;

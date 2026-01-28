@@ -43,8 +43,8 @@ export class RoleController {
     return this.roleService.update(id, updateRoleDto);
   }
 
-  @Delete(':id')
+  @Patch(':id/soft-delete')
   remove(@Param('id') id: Types.ObjectId) {
-    return this.roleService.remove(id);
+    return this.roleService.softDelete(id);
   }
 }

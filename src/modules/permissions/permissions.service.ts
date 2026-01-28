@@ -46,7 +46,7 @@ export class PermissionsService {
       throw new NotFoundException('id غير صالح');
     }
     // const permission = await this.permissionRepository.findOne({ filter: { _id: new Types.ObjectId(id) } });
-    const permission = await this.permissionRepository.findOne({ filter: { _id: id } });
+    const permission = await this.permissionRepository.findOne({ filter: { _id: id, freezedAt: { $exists: false } } });
 
 
     if (!permission) {
@@ -77,14 +77,17 @@ export class PermissionsService {
     };
   }
 
-  async remove(id: Types.ObjectId) {
+  async softDelete(id: Types.ObjectId) {
+
 
     if (!isValidObjectId(id)) {
       throw new NotFoundException('id غير صالح');
     }
 
-    const permission = await this.permissionRepository.findOneAndDelete({
-      filter: { _id: id },
+    const permission = await this.permissionRepository.findOneAndUpdate({
+      filter: { _id: id, freezedAt: { $exists: false } },
+      update: { freezedAt: true }
+
     });
 
     if (!permission) {

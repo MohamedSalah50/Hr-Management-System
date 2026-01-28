@@ -37,14 +37,14 @@ export class CreateEmployeeDto {
 
   @IsDateString({}, { message: 'من فضلك ادخل تاريخ الميلاد الصحيح' })
   @IsNotEmpty({ message: 'هذا الحقل مطلوب' })
-  @Transform(({ value }) => {
-    const date = new Date(value);
-    const age = new Date().getFullYear() - date.getFullYear();
-    if (age < 20) {
-      throw new Error('يجب الا يقل عمر الموظف عن 20 سنة');
-    }
-    return value;
-  })
+  // @Transform(({ value }) => {
+  //   const date = new Date(value);
+  //   const age = new Date().getFullYear() - date.getFullYear();
+    // if (age < 20) {
+    //   throw new Error('يجب الا يقل عمر الموظف عن 20 سنة');
+    // }
+    // return value;
+  // })
   birthDate: string;
 
   @IsEnum(GenderEnum, { message: 'من فضلك اختر النوع' })

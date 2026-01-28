@@ -24,7 +24,7 @@ import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 @auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('attendance')
 export class AttendanceController {
-  constructor(private readonly attendanceService: AttendanceService) {}
+  constructor(private readonly attendanceService: AttendanceService) { }
 
   @Post()
   create(@Body() createAttendanceDto: CreateAttendanceDto) {
@@ -67,9 +67,9 @@ export class AttendanceController {
     return this.attendanceService.update(id, updateAttendanceDto);
   }
 
-  @Delete(':id')
+  @Patch(':id')
   remove(@Param('id') id: string) {
-    return this.attendanceService.remove(id);
+    return this.attendanceService.softDelete(id);
   }
 
   @Post('import')
@@ -81,7 +81,7 @@ export class AttendanceController {
   @Post('export')
   async exportToExcel(
     @Res() res: Response,
-    @Body() searchDto: SearchAttendanceDto, 
+    @Body() searchDto: SearchAttendanceDto,
   ) {
     const buffer = await this.attendanceService.exportToExcel(searchDto);
 

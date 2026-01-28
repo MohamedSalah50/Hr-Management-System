@@ -5,4 +5,5 @@ export interface ISettings {
   value: string;
   dataType: SettingsEnum;
   description?: string;
+  freezedAt?: boolean;
 }

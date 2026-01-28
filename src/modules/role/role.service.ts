@@ -21,14 +21,12 @@ export class RoleService {
       throw new BadRequestException('من فضلك ادخل اسم المجموعة');
     }
 
-    // Validation Rule #2: تحديد الصلاحيات مطلوب
     if (!createRoleDto.permissions || createRoleDto.permissions.length === 0) {
       throw new BadRequestException(
         'من فضلك قم بتحديد صلاحيات المجموعة قبل الاضافة',
       );
     }
 
-    // Check if role already exists
     const existing = await this.roleRepository.findOne({
       filter: { name: createRoleDto.name },
     });
@@ -37,7 +35,6 @@ export class RoleService {
       throw new ConflictException('اسم المجموعة موجود بالفعل');
     }
 
-    // Validate all permissions exist
     const permissionIds = createRoleDto.permissions.map(
       (id) => new Types.ObjectId(id),
     );
@@ -50,7 +47,6 @@ export class RoleService {
       throw new BadRequestException('بعض الصلاحيات غير موجودة');
     }
 
-    // Validation Rule #1: Create role successfully
     const role = await this.roleRepository.create({
       data: [
         {
@@ -93,14 +89,14 @@ export class RoleService {
   }
 
   async update(id: Types.ObjectId, updateRoleDto: UpdateRoleDto) {
-    // Check if role exists
+    
     const existing = await this.roleRepository.findById({ id });
 
     if (!existing) {
       throw new NotFoundException('المجموعة غير موجودة');
     }
 
-    // Validate permissions if provided
+    
     if (updateRoleDto.permissions && updateRoleDto.permissions.length > 0) {
       const permissionIds = updateRoleDto.permissions.map(
         (permId) => new Types.ObjectId(permId),
@@ -128,9 +124,10 @@ export class RoleService {
     };
   }
 
-  async remove(id: Types.ObjectId) {
-    const role = await this.roleRepository.findOneAndDelete({
-      filter: { _id: id },
+  async softDelete(id: Types.ObjectId) {
+    const role = await this.roleRepository.findOneAndUpdate({
+      filter: { _id: id, freezedAt: { $exists: false } },
+      update: { freezedAt: true }
     });
 
     if (!role) {

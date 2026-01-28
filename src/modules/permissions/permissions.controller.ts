@@ -18,7 +18,7 @@ import { RoleEnum } from 'src/common';
 @auth([RoleEnum.admin, RoleEnum.superAdmin, RoleEnum.user])
 @Controller('permissions')
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) {}
+  constructor(private readonly permissionsService: PermissionsService) { }
 
   @Post()
   create(@Body() createPermissionDto: CreatePermissionDto) {
@@ -46,8 +46,8 @@ export class PermissionsController {
     return this.permissionsService.update(id, updatePermissionDto);
   }
 
-  @Delete(':id')
+  @Patch(':id/soft-delete')
   remove(@Param('id') id: Types.ObjectId) {
-    return this.permissionsService.remove(id);
+    return this.permissionsService.softDelete(id);
   }
 }

@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Put,
+  Patch,
 } from '@nestjs/common';
 import { SettingsService } from './settings.service';
 import { CreateSettingDto } from './dto/create-setting.dto';
@@ -51,9 +52,9 @@ export class SettingsController {
   /**
    * DELETE /settings/:key - Delete Setting
    */
-  @Delete(':key')
+  @Patch(':key')
   remove(@Param('key') key: string) {
-    return this.settingsService.remove(key);
+    return this.settingsService.softDelete(key);
   }
 
   /**

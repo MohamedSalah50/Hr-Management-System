@@ -16,10 +16,10 @@ export class Attendance implements IAttendance {
   date: Date;
 
   @Prop({ type: String, required: false, default: null })
-  checkIn?: string; // format: "09:15"
+  checkIn?: string;
 
   @Prop({ type: String, required: false, default: null })
-  checkOut?: string; // format: "17:30"
+  checkOut?: string;
 
   @Prop({ default: 0, type: Number })
   overtimeHours: number;
@@ -36,6 +36,9 @@ export class Attendance implements IAttendance {
 
   @Prop()
   notes: string;
+
+  @Prop({ required: false, default: false })
+  freezedAt: boolean;
 }
 
 export type AttendanceDocument = HydratedDocument<Attendance>;

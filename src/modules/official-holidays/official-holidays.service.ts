@@ -11,11 +11,9 @@ import { OfficialHolidayRepository } from 'src/db';
 export class OfficialHolidaysService {
   constructor(
     private readonly officialHolidayRepository: OfficialHolidayRepository,
-  ) {}
+  ) { }
 
-  /**
-   * Create Official Holiday - إضافة إجازة رسمية
-   */
+
   async create(createOfficialHolidayDto: CreateOfficialHolidayDto) {
     // Validate year
     if (createOfficialHolidayDto.year < 2008) {
@@ -48,9 +46,7 @@ export class OfficialHolidaysService {
     };
   }
 
-  /**
-   * Find All Official Holidays
-   */
+
   async findAll(year?: number) {
     const filter = year ? { year } : {};
     const holidays = await this.officialHolidayRepository.find({
@@ -64,9 +60,7 @@ export class OfficialHolidaysService {
     };
   }
 
-  /**
-   * Find One Official Holiday
-   */
+
   async findOne(id: string) {
     const holiday = await this.officialHolidayRepository.findOne({
       filter: { _id: id },
@@ -81,9 +75,7 @@ export class OfficialHolidaysService {
     };
   }
 
-  /**
-   * Update Official Holiday
-   */
+
   async update(id: string, updateOfficialHolidayDto: UpdateOfficialHolidayDto) {
     const existing = await this.officialHolidayRepository.findOne({
       filter: { _id: id },
@@ -93,12 +85,10 @@ export class OfficialHolidaysService {
       throw new NotFoundException('الإجازة الرسمية غير موجودة');
     }
 
-    // Validate year if provided
     if (updateOfficialHolidayDto.year && updateOfficialHolidayDto.year < 2008) {
       throw new BadRequestException('السنة يجب ألا تقل عن 2008');
     }
 
-    // Convert date string to Date if provided
     const updateData: any = { ...updateOfficialHolidayDto };
     if (updateOfficialHolidayDto.date) {
       updateData.date = new Date(updateOfficialHolidayDto.date);
@@ -115,12 +105,12 @@ export class OfficialHolidaysService {
     };
   }
 
-  /**
-   * Remove Official Holiday
-   */
-  async remove(id: string) {
-    const holiday = await this.officialHolidayRepository.findOneAndDelete({
-      filter: { _id: id },
+
+  async softDelete(id: string) {
+
+    const holiday = await this.officialHolidayRepository.findOneAndUpdate({
+      filter: { _id: id, freezedAt: { $exists: false } },
+      update: { freezedAt: true }
     });
 
     if (!holiday) {
@@ -132,9 +122,7 @@ export class OfficialHolidaysService {
     };
   }
 
-  /**
-   * Get Holidays by Year
-   */
+
   async getByYear(year: number) {
     const holidays = await this.officialHolidayRepository.find({
       filter: { year },
@@ -147,9 +135,7 @@ export class OfficialHolidaysService {
     };
   }
 
-  /**
-   * Check if date is a holiday
-   */
+
   async isHoliday(date: Date): Promise<boolean> {
     const year = date.getFullYear();
     const holidays = await this.officialHolidayRepository.find({

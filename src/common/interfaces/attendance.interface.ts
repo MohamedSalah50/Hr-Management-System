@@ -10,4 +10,6 @@ export interface IAttendance {
   lateHours: number;
   status: AttendanceEnum;
   notes?: string;
+  freezedAt?: boolean;
+
 }

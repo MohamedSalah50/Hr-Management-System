@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { SalaryReportService } from './salary-report.service';
 import { GenerateReportDto } from './dto/generate-report.dto';
@@ -16,7 +17,7 @@ import { RoleEnum } from 'src/common';
 @auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('salary-reports')
 export class SalaryReportController {
-  constructor(private readonly salaryReportService: SalaryReportService) {}
+  constructor(private readonly salaryReportService: SalaryReportService) { }
 
   @Post('generate')
   generateReport(@Body() generateReportDto: GenerateReportDto) {
@@ -51,9 +52,9 @@ export class SalaryReportController {
     return this.salaryReportService.findOne(id);
   }
 
-  @Delete(':id')
+  @Patch(':id/soft-delete')
   remove(@Param('id') id: string) {
-    return this.salaryReportService.remove(id);
+    return this.salaryReportService.softDelete(id);
   }
 
   @Get(':id/print')

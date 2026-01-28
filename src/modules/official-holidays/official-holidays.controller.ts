@@ -45,8 +45,8 @@ export class OfficialHolidaysController {
     return this.officialHolidaysService.update(id, updateOfficialHolidayDto);
   }
 
-  @Delete(':id')
+  @Patch(':id')
   remove(@Param('id') id: string) {
-    return this.officialHolidaysService.remove(id);
+    return this.officialHolidaysService.softDelete(id);
   }
 }

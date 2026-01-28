@@ -7,4 +7,5 @@ export interface IUserGroup {
   description?: string;
   permissions: IPermission[] | Types.ObjectId[];
   userIds: IUser[] | Types.ObjectId[];
+  freezedAt?: boolean;
 }

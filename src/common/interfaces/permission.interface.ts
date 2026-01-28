@@ -5,4 +5,6 @@ export interface IPermission {
     resource: string;
     action: string;
     description: string;
+    freezedAt?: boolean;
+
 }

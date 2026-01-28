@@ -12,4 +12,5 @@ export interface IUser {
   changeCredentialTime?: Date;
   role: RoleEnum;
   userGroupId: IUserGroup | Types.ObjectId;
+  freezedAt?: boolean;
 }

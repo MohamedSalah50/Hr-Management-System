@@ -16,11 +16,9 @@ export class SalaryReportService {
     private readonly salaryReportRepository: SalaryReportRepository,
     private readonly employeeRepository: EmployeeRepository,
     private readonly salaryCalculator: SalaryCalculatorHelper,
-  ) {}
+  ) { }
 
-  /**
-   * Generate Salary Report for Single Employee
-   */
+  
   async generateReport(generateReportDto: GenerateReportDto) {
     const { employeeId, month, year } = generateReportDto;
 
@@ -123,9 +121,7 @@ export class SalaryReportService {
     };
   }
 
-  /**
-   * Generate Reports for All Employees
-   */
+  
   async generateReportsForAll(month: number, year: number) {
     // Validation
     if (year < 2008) {
@@ -184,9 +180,7 @@ export class SalaryReportService {
     };
   }
 
-  /**
-   * Find All Salary Reports
-   */
+  
   async findAll() {
     const reports = await this.salaryReportRepository.find({
       filter: {},
@@ -208,9 +202,7 @@ export class SalaryReportService {
     };
   }
 
-  /**
-   * Find One Salary Report
-   */
+
   async findOne(id: string) {
     const reports = await this.salaryReportRepository.find({
       filter: { _id: id },
@@ -232,9 +224,7 @@ export class SalaryReportService {
     };
   }
 
-  /**
-   * Search Salary Reports
-   */
+
   async search(searchDto: SearchReportDto) {
     const filter: any = {};
 
@@ -286,12 +276,12 @@ export class SalaryReportService {
     };
   }
 
-  /**
-   * Delete Salary Report
-   */
-  async remove(id: string) {
-    const report = await this.salaryReportRepository.findOneAndDelete({
-      filter: { _id: id },
+
+  async softDelete(id: string) {
+    const report = await this.salaryReportRepository.findOneAndUpdate({
+      filter: { _id: id, freezedAt: { $exists: true } },
+      update: { freezedAt: true }
+
     });
 
     if (!report) {
@@ -303,9 +293,7 @@ export class SalaryReportService {
     };
   }
 
-  /**
-   * Regenerate Report (Delete old and create new)
-   */
+
   async regenerateReport(generateReportDto: GenerateReportDto) {
     const { employeeId, month, year } = generateReportDto;
 
@@ -328,9 +316,7 @@ export class SalaryReportService {
     return await this.generateReport(generateReportDto);
   }
 
-  /**
-   * Get Report Summary for a Period
-   */
+
   async getSummary(month: number, year: number) {
     const reports = await this.salaryReportRepository.find({
       filter: { month, year },
@@ -369,10 +355,7 @@ export class SalaryReportService {
     };
   }
 
-  /**
-   * Export Report to PDF-ready format
-   * (Frontend will handle actual PDF generation)
-   */
+
   async getReportForPrint(id: string) {
     const result = await this.findOne(id);
     const report = result.data as any;

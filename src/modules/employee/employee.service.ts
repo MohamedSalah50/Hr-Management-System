@@ -8,21 +8,17 @@ import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { DepartmentRepository, EmployeeRepository } from 'src/db';
 import { Types } from 'mongoose';
-import { filter } from 'rxjs';
+
 
 @Injectable()
 export class EmployeeService {
   constructor(
     private readonly employeeRepository: EmployeeRepository,
     private readonly departmentRepository: DepartmentRepository,
-  ) {}
+  ) { }
 
-  /**
-   * Create Employee - إضافة موظف
-   * Validation Rules من PDF (نقطة 4)
-   */
+
   async create(createEmployeeDto: CreateEmployeeDto) {
-    // Validation Rule #2: Check if all required fields are filled
     const requiredFields = [
       'fullName',
       'nationalId',
@@ -44,37 +40,28 @@ export class EmployeeService {
       }
     }
 
-    // Check if national ID already exists
     const existingEmployee = await this.employeeRepository.findOne({
-      filter: {
-        $or: [
-          { nationalId: createEmployeeDto.nationalId },
-          { fullName: createEmployeeDto.fullName },
-        ],
-      },
+      filter: { nationalId: createEmployeeDto.nationalId }
     });
 
     if (existingEmployee) {
       throw new ConflictException(
-        'الرقم القومي مسجل بالفعل او الاسم مسجل بالفعل',
+        'الرقم القومي مسجل بالفعل ',
       );
     }
 
-    // Validation Rule #4: Check age (minimum 20 years)
     const birthDate = new Date(createEmployeeDto.birthDate);
     const age = new Date().getFullYear() - birthDate.getFullYear();
     if (age < 20) {
       throw new BadRequestException('يجب الا يقل عمر الموظف عن 20 سنة');
     }
 
-    // Validation Rule #6: Check contract date (after company start date 2008)
     const contractDate = new Date(createEmployeeDto.contractDate);
     const companyStartDate = new Date('2008-01-01');
     if (contractDate < companyStartDate) {
       throw new BadRequestException('من فضلك ادخل تاريخ تعاقد صحيح');
     }
 
-    // Check if department exists
     const department = await this.departmentRepository.findOne({
       filter: { _id: createEmployeeDto.departmentId },
     });
@@ -83,7 +70,6 @@ export class EmployeeService {
       throw new BadRequestException('القسم غير موجود');
     }
 
-    // Validation Rule #1: Create employee successfully
     const employee = await this.employeeRepository.create({
       data: [
         {
@@ -140,7 +126,6 @@ export class EmployeeService {
       throw new NotFoundException('الموظف غير موجود');
     }
 
-    // Check if national ID is being changed and already exists
     if (
       updateEmployeeDto.nationalId &&
       updateEmployeeDto.nationalId !== existingEmployee.nationalId
@@ -157,7 +142,6 @@ export class EmployeeService {
       }
     }
 
-    // Validate birth date if provided
     if (updateEmployeeDto.birthDate) {
       const birthDate = new Date(updateEmployeeDto.birthDate);
       const age = new Date().getFullYear() - birthDate.getFullYear();
@@ -166,7 +150,6 @@ export class EmployeeService {
       }
     }
 
-    // Validate contract date if provided
     if (updateEmployeeDto.contractDate) {
       const contractDate = new Date(updateEmployeeDto.contractDate);
       const companyStartDate = new Date('2008-01-01');
@@ -175,7 +158,6 @@ export class EmployeeService {
       }
     }
 
-    // Check if department exists if being updated
     if (updateEmployeeDto.departmentId) {
       const department = await this.departmentRepository.findOne({
         filter: { _id: updateEmployeeDto.departmentId },
@@ -190,7 +172,6 @@ export class EmployeeService {
       ) as any;
     }
 
-    // Convert date strings to Date objects
     if (updateEmployeeDto.birthDate) {
       updateEmployeeDto.birthDate = new Date(
         updateEmployeeDto.birthDate,
@@ -213,9 +194,11 @@ export class EmployeeService {
     };
   }
 
-  async remove(id: string) {
-    const employee = await this.employeeRepository.findOneAndDelete({
-      filter: { _id: id },
+  async softDelete(id: string) {
+    const employee = await this.employeeRepository.findOneAndUpdate({
+      filter: { _id: id, freezedAt: { $exists: false } },
+      update: { freezedAt: true }
+
     });
 
     if (!employee) {
@@ -227,9 +210,7 @@ export class EmployeeService {
     };
   }
 
-  /**
-   * Search Employees - البحث عن الموظفين
-   */
+
   async search(query: string) {
     const employees = await this.employeeRepository.find({
       filter: {
@@ -248,9 +229,7 @@ export class EmployeeService {
     };
   }
 
-  /**
-   * Get Employees by Department - عرض موظفين حسب القسم
-   */
+
   async getByDepartment(departmentId: string) {
     const employees = await this.employeeRepository.find({
       filter: { _id: departmentId },
@@ -265,9 +244,7 @@ export class EmployeeService {
     };
   }
 
-  /**
-   * Toggle Employee Status - تفعيل/إلغاء تفعيل الموظف
-   */
+
   async toggleStatus(id: Types.ObjectId) {
     const employee = await this.employeeRepository.findOne({
       filter: { _id: id },

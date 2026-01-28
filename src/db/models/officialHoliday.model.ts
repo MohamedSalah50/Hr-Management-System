@@ -20,6 +20,9 @@ export class OfficialHoliday implements IOfficialHoliday {
 
   @Prop({ default: false })
   isRecurring: boolean;
+
+  @Prop({ required: false, default: false })
+  freezedAt: boolean;
 }
 
 export type OfficialHolidayDocument = HydratedDocument<OfficialHoliday>;

@@ -14,4 +14,6 @@ export interface ISalaryReport {
     overtimeAmount: number;
     deductionAmount: number;
     netSalary: number;
+    freezedAt?: boolean;
+
 }

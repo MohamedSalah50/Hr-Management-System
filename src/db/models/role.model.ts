@@ -17,6 +17,9 @@ export class Role implements IRole {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Permission' }], default: [] })
   permissions?: Types.ObjectId[];
+
+  @Prop({ required: false, default: false })
+  freezedAt: boolean;
 }
 
 export type RoleDocument = HydratedDocument<Role>;

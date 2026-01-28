@@ -16,4 +16,5 @@ export interface IEmployee {
     checkOutTime: string;
     departmentId: Types.ObjectId;
     isActive: boolean;
+    freezedAt?: boolean;
 }

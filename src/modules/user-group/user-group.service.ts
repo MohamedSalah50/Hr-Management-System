@@ -20,10 +20,9 @@ export class UserGroupsService {
     private readonly userGroupRepository: UserGroupRepository,
     private readonly permissionRepository: PermissionRepository,
     private readonly userRepository: UserRepository,
-  ) {}
+  ) { }
 
   async create(createUserGroupDto: CreateUserGroupDto) {
-    // التحقق من وجود المجموعة
     const existing = await this.userGroupRepository.findOne({
       filter: { name: createUserGroupDto.name },
     });
@@ -32,7 +31,6 @@ export class UserGroupsService {
       throw new ConflictException('المجموعة موجودة بالفعل');
     }
 
-    // التحقق من أن الصلاحيات موجودة
     if (createUserGroupDto.permissions?.length > 0) {
       const permissions = await this.permissionRepository.find({
         filter: { _id: { $in: createUserGroupDto.permissions } },
@@ -99,13 +97,11 @@ export class UserGroupsService {
     return { data: userGroup };
   }
 
-  // تعديل مجموعة
   async update(id: Types.ObjectId, updateUserGroupDto: UpdateUserGroupDto) {
     if (!isValidObjectId(id)) {
       throw new NotFoundException('المعرف غير صالح');
     }
 
-    // التحقق من أن المجموعة موجودة
     const existing = await this.userGroupRepository.findOne({
       filter: { _id: id },
     });
@@ -122,7 +118,6 @@ export class UserGroupsService {
       throw new ConflictException('الاسم موجود بالفعل');
     }
 
-    // التحقق من الصلاحيات إذا تم تحديثها
     if (
       updateUserGroupDto.permissions &&
       updateUserGroupDto.permissions?.length > 0
@@ -147,14 +142,15 @@ export class UserGroupsService {
     };
   }
 
-  // حذف مجموعة
-  async remove(id: Types.ObjectId) {
+  async softDelete(id: Types.ObjectId) {
     if (!isValidObjectId(id)) {
       throw new NotFoundException('المعرف غير صالح');
     }
 
-    const userGroup = await this.userGroupRepository.findOneAndDelete({
-      filter: { _id: id },
+    const userGroup = await this.userGroupRepository.findOneAndUpdate({
+      filter: { _id: id, freezedAt: { $exists: false } },
+      update: { freezedAt: true }
+
     });
 
     if (!userGroup) {
@@ -166,7 +162,6 @@ export class UserGroupsService {
     };
   }
 
-  // إضافة مستخدمين للمجموعة
   async addUsers(groupId: Types.ObjectId, userIds: string[]) {
     if (!isValidObjectId(groupId)) {
       throw new NotFoundException('المعرف غير صالح');
@@ -206,7 +201,6 @@ export class UserGroupsService {
     };
   }
 
-  // إزالة مستخدمين من المجموعة
   async removeUsers(groupId: Types.ObjectId, userIds: string[]) {
     if (!isValidObjectId(groupId)) {
       throw new NotFoundException('المعرف غير صالح');
@@ -229,7 +223,6 @@ export class UserGroupsService {
     };
   }
 
-  // إضافة صلاحيات للمجموعة
   async addPermissions(groupId: Types.ObjectId, permissionIds: string[]) {
     if (!isValidObjectId(groupId)) {
       throw new NotFoundException('المعرف غير صالح');
@@ -271,7 +264,6 @@ export class UserGroupsService {
     };
   }
 
-  // إزالة صلاحيات من المجموعة
   async removePermissions(groupId: Types.ObjectId, permissionIds: string[]) {
     if (!isValidObjectId(groupId)) {
       throw new NotFoundException('المعرف غير صالح');

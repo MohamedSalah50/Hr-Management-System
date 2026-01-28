@@ -10,10 +10,10 @@ import { Types } from 'mongoose';
 
 @Injectable()
 export class DepartmentService {
-  constructor(private readonly departmentRepository: DepartmentRepository) {}
+  constructor(private readonly departmentRepository: DepartmentRepository) { }
   async create(createDepartmentDto: CreateDepartmentDto) {
     const existing = await this.departmentRepository.findOne({
-      filter: { name: createDepartmentDto.name },
+      filter: { name: createDepartmentDto.name, freezedAt: { $exists: false } },
     });
 
     if (existing) {
@@ -31,7 +31,7 @@ export class DepartmentService {
   }
 
   async findAll() {
-    const departments = await this.departmentRepository.find({ filter: {} });
+    const departments = await this.departmentRepository.find({ filter: { freezedAt: { $exists: false } } });
     return {
       data: departments,
       total: departments.length,
@@ -40,7 +40,7 @@ export class DepartmentService {
 
   async findOne(id: Types.ObjectId) {
     const department = await this.departmentRepository.findOne({
-      filter: { _id: id },
+      filter: { _id: id, freezedAt: { $exists: false } },
     });
 
     if (!department) {
@@ -52,7 +52,7 @@ export class DepartmentService {
 
   async update(id: Types.ObjectId, updateDepartmentDto: UpdateDepartmentDto) {
     const existDepartmentName = await this.departmentRepository.findOne({
-      filter: { name: updateDepartmentDto.name },
+      filter: { name: updateDepartmentDto.name, freezedAt: { $exists: false } },
     });
 
     if (existDepartmentName) {
@@ -74,9 +74,10 @@ export class DepartmentService {
     };
   }
 
-  async remove(id: Types.ObjectId) {
-    const department = await this.departmentRepository.findOneAndDelete({
-      filter: { _id: id },
+  async softDelete(id: Types.ObjectId) {
+    const department = await this.departmentRepository.findOneAndUpdate({
+      filter: { _id: id, freezedAt: { $exists: false } },
+      update: { freezedAt: true }
     });
 
     if (!department) {

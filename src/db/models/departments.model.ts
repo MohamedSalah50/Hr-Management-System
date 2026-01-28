@@ -14,6 +14,9 @@ export class Department implements IDepartment {
 
   @Prop()
   description: string;
+
+  @Prop({ required: false, default: false })
+  freezedAt: boolean;
 }
 
 export type DepartmentDocument = HydratedDocument<Department>;

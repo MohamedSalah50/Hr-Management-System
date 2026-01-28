@@ -19,27 +19,23 @@ import { UpdateUserGroupDto } from './dto/update-user-group.dto';
 @auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('user-groups')
 export class UserGroupsController {
-  constructor(private readonly userGroupsService: UserGroupsService) {}
+  constructor(private readonly userGroupsService: UserGroupsService) { }
 
-  // إضافة مجموعة
   @Post()
   create(@Body() createUserGroupDto: CreateUserGroupDto) {
     return this.userGroupsService.create(createUserGroupDto);
   }
 
-  // عرض كل المجموعات
   @Get()
   findAll() {
     return this.userGroupsService.findAll();
   }
 
-  // عرض مجموعة واحدة
   @Get(':id')
   findOne(@Param('id') id: Types.ObjectId) {
     return this.userGroupsService.findOne(id);
   }
 
-  // تعديل مجموعة
   @Patch(':id')
   update(
     @Param('id') id: Types.ObjectId,
@@ -48,13 +44,11 @@ export class UserGroupsController {
     return this.userGroupsService.update(id, updateUserGroupDto);
   }
 
-  // حذف مجموعة
-  @Delete(':id')
+  @Patch(':id/soft-delete')
   remove(@Param('id') id: Types.ObjectId) {
-    return this.userGroupsService.remove(id);
+    return this.userGroupsService.softDelete(id);
   }
 
-  // إضافة مستخدمين للمجموعة
   @Post(':id/users')
   addUsers(
     @Param('id') id: Types.ObjectId,
@@ -63,7 +57,6 @@ export class UserGroupsController {
     return this.userGroupsService.addUsers(id, userIds);
   }
 
-  // إزالة مستخدمين من المجموعة
   @Delete(':id/users')
   removeUsers(
     @Param('id') id: Types.ObjectId,
@@ -72,7 +65,6 @@ export class UserGroupsController {
     return this.userGroupsService.removeUsers(id, userIds);
   }
 
-  // إضافة صلاحيات للمجموعة
   @Post(':id/permissions')
   addPermissions(
     @Param('id') id: Types.ObjectId,
@@ -81,7 +73,6 @@ export class UserGroupsController {
     return this.userGroupsService.addPermissions(id, permissions);
   }
 
-  // إزالة صلاحيات من المجموعة
   @Delete(':id/permissions')
   removePermissions(
     @Param('id') id: Types.ObjectId,

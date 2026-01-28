@@ -47,6 +47,9 @@ export class SalaryReport implements ISalaryReport {
 
   @Prop({ required: true, type: Number })
   netSalary: number;
+
+  @Prop({ required: false, default: false })
+  freezedAt: boolean;
 }
 
 export type SalaryReportDocument = HydratedDocument<SalaryReport>;

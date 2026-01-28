@@ -11,7 +11,7 @@ import { WeekendSettingsDto } from './dto/weekend-settings.dto';
 
 @Injectable()
 export class SettingsService {
-  constructor(private readonly settingRepository: SettingRepository) {}
+  constructor(private readonly settingRepository: SettingRepository) { }
   async upsert(createSettingDto: CreateSettingDto) {
     const existing = await this.settingRepository.findOne({
       filter: { key: createSettingDto.key },
@@ -45,9 +45,7 @@ export class SettingsService {
     };
   }
 
-  /**
-   * Get All Settings
-   */
+  
   async findAll() {
     const settings = await this.settingRepository.find({ filter: {} });
     return {
@@ -56,9 +54,7 @@ export class SettingsService {
     };
   }
 
-  /**
-   * Get Setting by Key
-   */
+  
   async findByKey(key: string) {
     const setting = await this.settingRepository.findOne({ filter: { key } });
 
@@ -71,18 +67,18 @@ export class SettingsService {
     };
   }
 
-  /**
-   * Delete Setting
-   */
-  async remove(key: string) {
-    const setting = await this.settingRepository.findOne({ filter: { key } });
+
+  async softDelete(key: string) {
+    const setting = await this.settingRepository.findOne({ filter: { key, freezedAt: { $exists: false } } });
 
     if (!setting) {
       throw new NotFoundException('الإعداد غير موجود');
     }
 
-    await this.settingRepository.findOneAndDelete({
+    await this.settingRepository.findOneAndUpdate({
       filter: { _id: setting._id.toString() },
+      update: { freezedAt: true }
+
     });
 
     return {
@@ -199,9 +195,7 @@ export class SettingsService {
     };
   }
 
-  /**
-   * Get Weekend Settings
-   */
+
   async getWeekendSettings() {
     const weekendDays = await this.settingRepository.findOne({
       filter: { key: 'weekend_days' },
@@ -214,9 +208,7 @@ export class SettingsService {
     };
   }
 
-  /**
-   * Get All General Settings (Combined)
-   */
+
   async getGeneralSettings() {
     const overtimeDeduction = await this.getOvertimeDeductionSettings();
     const weekend = await this.getWeekendSettings();

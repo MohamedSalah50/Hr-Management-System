@@ -13,13 +13,16 @@ export class Permission implements IPermission {
   name: string;
 
   @Prop({ required: true })
-  resource: string; // employees, attendance, reports, etc.
+  resource: string;
 
   @Prop({ required: true })
-  action: string; // create, read, update, delete
+  action: string;
 
   @Prop({ required: false, minlength: 15, maxlength: 500 })
   description: string;
+  
+  @Prop({ required: false, default: false })
+  freezedAt: boolean;
 }
 
 export type PermissionDocument = HydratedDocument<Permission>;
