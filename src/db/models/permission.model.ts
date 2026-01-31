@@ -21,7 +21,7 @@ export class Permission implements IPermission {
   @Prop({ required: false, minlength: 15, maxlength: 500 })
   description: string;
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt: boolean;
 }
 

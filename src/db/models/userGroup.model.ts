@@ -18,7 +18,7 @@ export class UserGroup implements IUserGroup {
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
   userIds: Types.ObjectId[];
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt: boolean;
 }
 
@@ -26,18 +26,16 @@ export type UserGroupDocument = HydratedDocument<UserGroup>;
 
 export const UserGroupSchema = SchemaFactory.createForClass(UserGroup);
 
-
 UserGroupSchema.pre(['findOne', 'find'], function (next) {
   const query = this.getQuery();
 
   if (query.paranoid === false) {
-    this.setQuery({ ...query })
+    this.setQuery({ ...query });
   } else {
-    this.setQuery({ ...query, freezedAt: { $exists: false } })
-
+    this.setQuery({ ...query, freezedAt: { $exists: false } });
   }
   next();
-})
+});
 
 export const UserGroupModel = MongooseModule.forFeature([
   {

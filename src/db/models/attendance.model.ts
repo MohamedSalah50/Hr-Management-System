@@ -37,7 +37,7 @@ export class Attendance implements IAttendance {
   @Prop()
   notes: string;
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt: boolean;
 }
 

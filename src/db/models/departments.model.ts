@@ -15,7 +15,7 @@ export class Department implements IDepartment {
   @Prop()
   description: string;
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt: boolean;
 }
 
@@ -27,13 +27,12 @@ DepartmentSchema.pre(['findOne', 'find'], function (next) {
   const query = this.getQuery();
 
   if (query.paranoid === false) {
-    this.setQuery({ ...query })
+    this.setQuery({ ...query });
   } else {
-    this.setQuery({ ...query, freezedAt: { $exists: false } })
-
+    this.setQuery({ ...query, freezedAt: { $exists: false } });
   }
   next();
-})
+});
 
 export const DepartmentModel = MongooseModule.forFeature([
   {

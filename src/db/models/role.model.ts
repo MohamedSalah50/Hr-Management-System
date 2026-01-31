@@ -18,7 +18,7 @@ export class Role implements IRole {
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Permission' }], default: [] })
   permissions?: Types.ObjectId[];
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt: boolean;
 }
 

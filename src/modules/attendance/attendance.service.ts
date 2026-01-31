@@ -24,7 +24,7 @@ export class AttendanceService {
     private readonly employeeRepository: EmployeeRepository,
     private readonly officialHolidayRepository: OfficialHolidayRepository,
     private readonly attendanceCalculator: AttendanceCalculatorHelper,
-  ) { }
+  ) {}
 
   async create(createAttendanceDto: CreateAttendanceDto) {
     const employee = await this.employeeRepository.findOne({
@@ -222,10 +222,9 @@ export class AttendanceService {
   }
 
   async softDelete(id: string) {
-
     const attendance = await this.attendanceRepository.findOneAndUpdate({
       filter: { _id: id, freezedAt: { $exists: false } },
-      update: { freezedAt: true }
+      update: { freezedAt: true },
     });
 
     if (!attendance) {
@@ -331,7 +330,6 @@ export class AttendanceService {
       const worksheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(worksheet);
 
-      // ✅ FIX: Define proper types
       const records: any[] = [];
       const errors: Array<{ row: number; error: string }> = [];
 
@@ -339,7 +337,6 @@ export class AttendanceService {
         const row: any = data[i];
 
         try {
-          // Validate and create attendance record
           const employeeId =
             row.employeeId || row['Employee ID'] || row['معرف الموظف'];
           const date = row.date || row['Date'] || row['التاريخ'];

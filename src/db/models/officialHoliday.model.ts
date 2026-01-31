@@ -21,7 +21,7 @@ export class OfficialHoliday implements IOfficialHoliday {
   @Prop({ default: false })
   isRecurring: boolean;
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt: boolean;
 }
 

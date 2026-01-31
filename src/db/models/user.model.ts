@@ -40,7 +40,7 @@ export class User implements IUser {
   @Prop({ type: Types.ObjectId, ref: 'UserGroup', required: true })
   userGroupId: Types.ObjectId;
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt?: boolean;
 }
 

@@ -25,7 +25,7 @@ export class Setting implements ISettings {
   @Prop()
   description: string;
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt: boolean;
 }
 

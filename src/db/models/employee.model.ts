@@ -48,7 +48,7 @@ export class Employee implements IEmployee {
   @Prop({ default: true })
   isActive: boolean;
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt?: boolean;
 }
 

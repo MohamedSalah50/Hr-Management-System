@@ -48,7 +48,7 @@ export class SalaryReport implements ISalaryReport {
   @Prop({ required: true, type: Number })
   netSalary: number;
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: false })
   freezedAt: boolean;
 }
 

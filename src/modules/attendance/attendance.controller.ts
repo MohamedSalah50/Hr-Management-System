@@ -24,7 +24,7 @@ import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 @auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('attendance')
 export class AttendanceController {
-  constructor(private readonly attendanceService: AttendanceService) { }
+  constructor(private readonly attendanceService: AttendanceService) {}
 
   @Post()
   create(@Body() createAttendanceDto: CreateAttendanceDto) {
@@ -74,8 +74,8 @@ export class AttendanceController {
 
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))
-  importExcel(@UploadedFile() file: Express.Multer.File) {
-    return this.attendanceService.importFromExcel(file);
+  async importExcel(@UploadedFile() file: Express.Multer.File) {
+    return await this.attendanceService.importFromExcel(file);
   }
 
   @Post('export')

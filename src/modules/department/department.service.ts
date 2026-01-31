@@ -10,7 +10,7 @@ import { Types } from 'mongoose';
 
 @Injectable()
 export class DepartmentService {
-  constructor(private readonly departmentRepository: DepartmentRepository) { }
+  constructor(private readonly departmentRepository: DepartmentRepository) {}
   async create(createDepartmentDto: CreateDepartmentDto) {
     const existing = await this.departmentRepository.findOne({
       filter: { name: createDepartmentDto.name, freezedAt: { $exists: false } },
@@ -77,7 +77,7 @@ export class DepartmentService {
   async softDelete(id: Types.ObjectId) {
     const department = await this.departmentRepository.findOneAndUpdate({
       filter: { _id: id, freezedAt: { $exists: false } },
-      update: { freezedAt: true }
+      update: { freezedAt: true },
     });
 
     if (!department) {
