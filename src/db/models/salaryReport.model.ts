@@ -66,6 +66,7 @@ SalaryReportSchema.pre(['findOne', 'find'], function (next) {
     this.setQuery({ ...query, freezedAt: { $exists: false } })
 
   }
+  next();
 })
 
 

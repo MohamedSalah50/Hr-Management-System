@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,10 +11,11 @@ import {
   AttendanceRepository,
   EmployeeRepository,
   OfficialHolidayRepository,
+  UserRepository,
 } from 'src/db';
 import { AttendanceCalculatorHelper } from './helpers/attendance-calculator.helper';
 import { Types } from 'mongoose';
-import { AttendanceEnum } from 'src/common';
+import { AttendanceEnum, PermissionsEnum } from 'src/common';
 import { SearchAttendanceDto } from './dto/search-attendance.dto';
 import * as XLSX from 'xlsx';
 
@@ -24,9 +26,49 @@ export class AttendanceService {
     private readonly employeeRepository: EmployeeRepository,
     private readonly officialHolidayRepository: OfficialHolidayRepository,
     private readonly attendanceCalculator: AttendanceCalculatorHelper,
-  ) {}
+    private readonly userRepository: UserRepository
+  ) { }
 
   async create(createAttendanceDto: CreateAttendanceDto) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: new Types.ObjectId(createAttendanceDto.userId) },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "attendance" && perm.action === PermissionsEnum.create,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية لانشاء سجل حضور. يرجى التواصل مع المسؤول`,
+      );
+    }
     const employee = await this.employeeRepository.findOne({
       filter: { _id: createAttendanceDto.employeeId },
     });
@@ -128,7 +170,46 @@ export class AttendanceService {
     };
   }
 
-  async findAll() {
+  async findAll(userId: Types.ObjectId) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "attendance" && perm.action === PermissionsEnum.read,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية للاطلاع ع سجلات الحضور . يرجى التواصل مع المسؤول`,
+      );
+    }
     const records = await this.attendanceRepository.find({
       filter: {},
       options: {
@@ -147,7 +228,46 @@ export class AttendanceService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: Types.ObjectId) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "attendance" && perm.action === PermissionsEnum.read,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية للاطلاع ع سجل حضور. يرجى التواصل مع المسؤول`,
+      );
+    }
     const records = await this.attendanceRepository.find({
       filter: { _id: id },
       options: {
@@ -168,7 +288,46 @@ export class AttendanceService {
     };
   }
 
-  async update(id: string, updateAttendanceDto: UpdateAttendanceDto) {
+  async update(id: string, userId: Types.ObjectId, updateAttendanceDto: UpdateAttendanceDto) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "attendance" && perm.action === PermissionsEnum.update,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحيةلتعديل سجل حضور. يرجى التواصل مع المسؤول`,
+      );
+    }
     const existing = await this.attendanceRepository.findOne({
       filter: { _id: id },
     });
@@ -221,7 +380,47 @@ export class AttendanceService {
     };
   }
 
-  async softDelete(id: string) {
+  async softDelete(id: string, userId: Types.ObjectId) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "attendance" && perm.action === PermissionsEnum.delete,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية لحذف سجل الحضور. يرجى التواصل مع المسؤول`,
+      );
+    }
+
     const attendance = await this.attendanceRepository.findOneAndUpdate({
       filter: { _id: id, freezedAt: { $exists: false } },
       update: { freezedAt: true },

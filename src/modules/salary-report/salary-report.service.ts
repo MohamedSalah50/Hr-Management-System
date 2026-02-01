@@ -1,14 +1,16 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { GenerateReportDto } from './dto/generate-report.dto';
-import { EmployeeRepository, SalaryReportRepository } from 'src/db';
+import { EmployeeRepository, SalaryReportRepository, UserRepository } from 'src/db';
 import { SalaryCalculatorHelper } from './helpers/salary-calculator.helper';
 import { Types } from 'mongoose';
 import { SearchReportDto } from './dto/search-report.dto';
+import { PermissionsEnum } from 'src/common';
 
 @Injectable()
 export class SalaryReportService {
@@ -16,10 +18,50 @@ export class SalaryReportService {
     private readonly salaryReportRepository: SalaryReportRepository,
     private readonly employeeRepository: EmployeeRepository,
     private readonly salaryCalculator: SalaryCalculatorHelper,
+    private readonly userRepository: UserRepository
   ) { }
 
 
-  async generateReport(generateReportDto: GenerateReportDto) {
+  async generateReport(generateReportDto: GenerateReportDto, userId: Types.ObjectId) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "salaryReport" && perm.action === PermissionsEnum.create,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية لاضافه تقرير الراتب. يرجى التواصل مع المسؤول`,
+      );
+    }
     const { employeeId, month, year } = generateReportDto;
 
     // Validation
@@ -122,67 +164,107 @@ export class SalaryReportService {
   }
 
 
-  async generateReportsForAll(month: number, year: number) {
-    // Validation
-    if (year < 2008) {
-      throw new BadRequestException('من فضلك اختر سنة صحيحه');
-    }
+  // async generateReportsForAll(month: number, year: number) {
+  //   // Validation
+  //   if (year < 2008) {
+  //     throw new BadRequestException('من فضلك اختر سنة صحيحه');
+  //   }
 
-    const employees = await this.employeeRepository.find({
-      filter: { isActive: true },
+  //   const employees = await this.employeeRepository.find({
+  //     filter: { isActive: true },
+  //   });
+
+  //   // ✅ FIX: Define proper types
+  //   const results: {
+  //     success: Array<{
+  //       employeeId: Types.ObjectId;
+  //       employeeName: string;
+  //       report: any;
+  //     }>;
+  //     failed: Array<{
+  //       employeeId: Types.ObjectId;
+  //       employeeName: string;
+  //       error: string;
+  //     }>;
+  //   } = {
+  //     success: [],
+  //     failed: [],
+  //   };
+
+  //   // ✅ Type assertion
+  //   const typedEmployees = employees as any[];
+
+  //   for (const employee of typedEmployees) {
+  //     try {
+  //       const report = await this.generateReport({
+  //         employeeId: employee._id.toString(),
+  //         month,
+  //         year,
+  //         userId: employee._id,
+  //       });
+
+  //       results.success.push({
+  //         employeeId: employee._id,
+  //         employeeName: employee.fullName,
+  //         report: report.data,
+  //       });
+  //     } catch (error) {
+  //       results.failed.push({
+  //         employeeId: employee._id,
+  //         employeeName: employee.fullName,
+  //         error: error.message,
+  //       });
+  //     }
+  //   }
+
+  //   return {
+  //     message: `تم إنشاء ${results.success.length} تقرير بنجاح`,
+  //     data: results,
+  //   };
+  // }
+
+
+  async findAll(userId: Types.ObjectId) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
     });
 
-    // ✅ FIX: Define proper types
-    const results: {
-      success: Array<{
-        employeeId: Types.ObjectId;
-        employeeName: string;
-        report: any;
-      }>;
-      failed: Array<{
-        employeeId: Types.ObjectId;
-        employeeName: string;
-        error: string;
-      }>;
-    } = {
-      success: [],
-      failed: [],
-    };
-
-    // ✅ Type assertion
-    const typedEmployees = employees as any[];
-
-    for (const employee of typedEmployees) {
-      try {
-        const report = await this.generateReport({
-          employeeId: employee._id.toString(),
-          month,
-          year,
-        });
-
-        results.success.push({
-          employeeId: employee._id,
-          employeeName: employee.fullName,
-          report: report.data,
-        });
-      } catch (error) {
-        results.failed.push({
-          employeeId: employee._id,
-          employeeName: employee.fullName,
-          error: error.message,
-        });
-      }
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
     }
 
-    return {
-      message: `تم إنشاء ${results.success.length} تقرير بنجاح`,
-      data: results,
-    };
-  }
+    const userGroup = user.userGroupId as any;
 
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
 
-  async findAll() {
-    
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "salaryReport" && perm.action === PermissionsEnum.read,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية للاطلاع على تقارير الرواتب. يرجى التواصل مع المسؤول`,
+      );
+    }
+
     const reports = await this.salaryReportRepository.find({
       filter: {},
       options: {
@@ -204,7 +286,46 @@ export class SalaryReportService {
   }
 
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: Types.ObjectId) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "salaryReport" && perm.action === PermissionsEnum.read,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية للاطلاع علي هذا التقرير. يرجى التواصل مع المسؤول`,
+      );
+    }
     const reports = await this.salaryReportRepository.find({
       filter: { _id: id },
       options: {
@@ -278,11 +399,48 @@ export class SalaryReportService {
   }
 
 
-  async softDelete(id: string) {
+  async softDelete(id: string, userId: Types.ObjectId) {
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "salaryReport" && perm.action === PermissionsEnum.delete,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية لحذف تقرير الراتب. يرجى التواصل مع المسؤول`,
+      );
+    }
     const report = await this.salaryReportRepository.findOneAndUpdate({
       filter: { _id: id, freezedAt: { $exists: true } },
       update: { freezedAt: true }
-
     });
 
     if (!report) {
@@ -295,27 +453,27 @@ export class SalaryReportService {
   }
 
 
-  async regenerateReport(generateReportDto: GenerateReportDto) {
-    const { employeeId, month, year } = generateReportDto;
+  // async regenerateReport(generateReportDto: GenerateReportDto) {
+  //   const { employeeId, month, year } = generateReportDto;
 
-    // Find and delete existing report
-    const existingReport = await this.salaryReportRepository.findOne({
-      filter: {
-        employeeId: new Types.ObjectId(employeeId),
-        month,
-        year,
-      },
-    });
+  //   // Find and delete existing report
+  //   const existingReport = await this.salaryReportRepository.findOne({
+  //     filter: {
+  //       employeeId: new Types.ObjectId(employeeId),
+  //       month,
+  //       year,
+  //     },
+  //   });
 
-    if (existingReport) {
-      await this.salaryReportRepository.findOneAndDelete({
-        filter: { _id: existingReport._id.toString() },
-      });
-    }
+  //   if (existingReport) {
+  //     await this.salaryReportRepository.findOneAndDelete({
+  //       filter: { _id: existingReport._id.toString() },
+  //     });
+  //   }
 
-    // Generate new report
-    return await this.generateReport(generateReportDto);
-  }
+  //   // Generate new report
+  //   return await this.generateReport(generateReportDto);
+  // }
 
 
   async getSummary(month: number, year: number) {
@@ -357,27 +515,27 @@ export class SalaryReportService {
   }
 
 
-  async getReportForPrint(id: string) {
-    const result = await this.findOne(id);
-    const report = result.data as any;
+  // async getReportForPrint(id: string) {
+  //   const result = await this.findOne(id);
+  //   const report = result.data as any;
 
-    return {
-      data: {
-        employeeName: report.employeeId?.fullName || '',
-        nationalId: report.employeeId?.nationalId || '',
-        department: report.employeeId?.departmentId?.name || '',
-        month: report.month,
-        year: report.year,
-        baseSalary: report.baseSalary,
-        daysPresent: report.daysPresent,
-        daysAbsent: report.daysAbsent,
-        overtimeHours: report.overtimeHours,
-        lateHours: report.lateHours,
-        overtimeAmount: report.overtimeAmount,
-        deductionAmount: report.deductionAmount,
-        netSalary: report.netSalary,
-        generatedDate: new Date().toLocaleDateString('ar-EG'),
-      },
-    };
-  }
+  //   return {
+  //     data: {
+  //       employeeName: report.employeeId?.fullName || '',
+  //       nationalId: report.employeeId?.nationalId || '',
+  //       department: report.employeeId?.departmentId?.name || '',
+  //       month: report.month,
+  //       year: report.year,
+  //       baseSalary: report.baseSalary,
+  //       daysPresent: report.daysPresent,
+  //       daysAbsent: report.daysAbsent,
+  //       overtimeHours: report.overtimeHours,
+  //       lateHours: report.lateHours,
+  //       overtimeAmount: report.overtimeAmount,
+  //       deductionAmount: report.deductionAmount,
+  //       netSalary: report.netSalary,
+  //       generatedDate: new Date().toLocaleDateString('ar-EG'),
+  //     },
+  //   };
+  // }`
 }

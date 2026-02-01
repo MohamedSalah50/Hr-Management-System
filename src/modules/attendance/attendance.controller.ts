@@ -20,20 +20,23 @@ import { auth } from 'src/common/decorators/auth.decorator';
 import { RoleEnum } from 'src/common';
 import { SearchAttendanceDto } from './dto/search-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
+import { Types } from 'mongoose';
 
 @auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('attendance')
 export class AttendanceController {
-  constructor(private readonly attendanceService: AttendanceService) {}
+  constructor(private readonly attendanceService: AttendanceService) { }
 
   @Post()
   create(@Body() createAttendanceDto: CreateAttendanceDto) {
     return this.attendanceService.create(createAttendanceDto);
   }
 
-  @Get()
-  findAll() {
-    return this.attendanceService.findAll();
+  @Get(':userId')
+  findAll(
+    @Param('userId') userId: Types.ObjectId,
+  ) {
+    return this.attendanceService.findAll(userId);
   }
 
   @Post('search')
@@ -54,22 +57,25 @@ export class AttendanceController {
     );
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.attendanceService.findOne(id);
+  @Get(':id/:userId')
+  findOne(@Param('id') id: string,
+    @Param('userId') userId: Types.ObjectId,
+  ) {
+    return this.attendanceService.findOne(id, userId);
   }
 
-  @Patch(':id')
+  @Patch(':id/:userId')
   update(
     @Param('id') id: string,
+    @Param('userId') userId: Types.ObjectId,
     @Body() updateAttendanceDto: UpdateAttendanceDto,
   ) {
-    return this.attendanceService.update(id, updateAttendanceDto);
+    return this.attendanceService.update(id, userId, updateAttendanceDto);
   }
 
-  @Patch(':id/soft-delete')
-  remove(@Param('id') id: string) {
-    return this.attendanceService.softDelete(id);
+  @Patch(':id/soft-delete/:userId')
+  remove(@Param('id') id: string, @Param('userId') userId: Types.ObjectId) {
+    return this.attendanceService.softDelete(id, userId);
   }
 
   @Post('import')

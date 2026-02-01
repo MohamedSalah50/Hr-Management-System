@@ -16,4 +16,8 @@ export class CreateSettingDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userId?: string;
 }

@@ -11,10 +11,12 @@ import {
   SalaryReportRepository,
   SettingModel,
   SettingRepository,
+  UserModel,
+  UserRepository,
 } from 'src/db';
 
 @Module({
-  imports: [SalaryReportModel, EmployeeModel,SettingModel,AttendanceModel],
+  imports: [SalaryReportModel, EmployeeModel, SettingModel, AttendanceModel, UserModel],
   controllers: [SalaryReportController],
   providers: [
     SalaryReportService,
@@ -22,7 +24,8 @@ import {
     EmployeeRepository,
     SalaryReportRepository,
     SettingRepository,
-    AttendanceRepository
+    AttendanceRepository,
+    UserRepository
   ],
 })
-export class SalaryReportModule {}
+export class SalaryReportModule { }

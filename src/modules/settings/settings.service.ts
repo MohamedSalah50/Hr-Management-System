@@ -1,18 +1,62 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateSettingDto } from './dto/create-setting.dto';
-import { SettingRepository } from 'src/db';
+import { SettingRepository, UserRepository } from 'src/db';
 import { OvertimeDeductionSettingsDto } from './dto/overtime-deduction-settings.dto';
-import { SettingsEnum } from 'src/common';
+import { PermissionsEnum, SettingsEnum } from 'src/common';
 import { WeekendSettingsDto } from './dto/weekend-settings.dto';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class SettingsService {
-  constructor(private readonly settingRepository: SettingRepository) { }
+  constructor(private readonly settingRepository: SettingRepository, private readonly userRepository: UserRepository) { }
   async upsert(createSettingDto: CreateSettingDto) {
+
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: new Types.ObjectId(createSettingDto.userId) },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "settings" && perm.action === PermissionsEnum.create,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية لحذف موظف. يرجى التواصل مع المسؤول`,
+      );
+    }
+
+
     const existing = await this.settingRepository.findOne({
       filter: { key: createSettingDto.key },
     });
@@ -45,8 +89,48 @@ export class SettingsService {
     };
   }
 
-  
-  async findAll() {
+
+  async findAll(userId: Types.ObjectId) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "settings" && perm.action === PermissionsEnum.read,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية لحذف موظف. يرجى التواصل مع المسؤول`,
+      );
+    }
+
     const settings = await this.settingRepository.find({ filter: {} });
     return {
       data: settings,
@@ -54,8 +138,47 @@ export class SettingsService {
     };
   }
 
-  
-  async findByKey(key: string) {
+
+  async findByKey(key: string, userId: Types.ObjectId) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "settings" && perm.action === PermissionsEnum.read,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية لحذف موظف. يرجى التواصل مع المسؤول`,
+      );
+    }
     const setting = await this.settingRepository.findOne({ filter: { key } });
 
     if (!setting) {
@@ -68,7 +191,46 @@ export class SettingsService {
   }
 
 
-  async softDelete(key: string) {
+  async softDelete(key: string, userId: Types.ObjectId) {
+
+    const user = await this.userRepository.findOne({
+      filter: { _id: userId },
+      options: {
+        populate: {
+          path: 'userGroupId',
+          select: 'name permissions',
+          populate: {
+            path: 'permissions',
+            select: 'resource action name',
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('المستخدم غير موجود');
+    }
+
+    const userGroup = user.userGroupId as any;
+
+    if (!userGroup) {
+      throw new ForbiddenException(
+        'ليس لديك مجموعة صلاحيات. يرجى التواصل مع المسؤول',
+      );
+    }
+
+    const permissions = userGroup.permissions || [];
+
+    const hasPermission = permissions.some(
+      (perm: any) =>
+        perm.resource === "settings" && perm.action === PermissionsEnum.delete,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `ليس لديك صلاحية لحذف موظف. يرجى التواصل مع المسؤول`,
+      );
+    }
     const setting = await this.settingRepository.findOne({ filter: { key, freezedAt: { $exists: false } } });
 
     if (!setting) {

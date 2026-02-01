@@ -16,7 +16,7 @@ import { UserGroupsService } from './user-group.service';
 import { CreateUserGroupDto } from './dto/create-user-group.dto';
 import { UpdateUserGroupDto } from './dto/update-user-group.dto';
 
-@auth([RoleEnum.admin, RoleEnum.superAdmin])
+@auth([RoleEnum.admin, RoleEnum.user])
 @Controller('user-groups')
 export class UserGroupsController {
   constructor(private readonly userGroupsService: UserGroupsService) { }

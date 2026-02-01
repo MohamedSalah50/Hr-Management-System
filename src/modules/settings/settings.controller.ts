@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Param,
-  Delete,
   Put,
   Patch,
 } from '@nestjs/common';
@@ -14,6 +13,7 @@ import { OvertimeDeductionSettingsDto } from './dto/overtime-deduction-settings.
 import { WeekendSettingsDto } from './dto/weekend-settings.dto';
 import { RoleEnum } from 'src/common';
 import { auth } from 'src/common/decorators/auth.decorator';
+import { Types } from 'mongoose';
 
 @auth([RoleEnum.admin, RoleEnum.superAdmin])
 @Controller('settings')
@@ -26,9 +26,9 @@ export class SettingsController {
   }
 
 
-  @Get()
-  findAll() {
-    return this.settingsService.findAll();
+  @Get(":userId")
+  findAll(@Param('userId') userId: Types.ObjectId) {
+    return this.settingsService.findAll(userId);
   }
 
 
@@ -38,15 +38,15 @@ export class SettingsController {
   }
 
 
-  @Get(':key')
-  findByKey(@Param('key') key: string) {
-    return this.settingsService.findByKey(key);
+  @Get(':key/:userId')
+  findByKey(@Param('key') key: string, @Param('userId') userId: Types.ObjectId) {
+    return this.settingsService.findByKey(key, userId);
   }
 
 
-  @Patch(':key/soft-delete')
-  remove(@Param('key') key: string) {
-    return this.settingsService.softDelete(key);
+  @Patch(':key/soft-delete/:userId')
+  remove(@Param('key') key: string, @Param('userId') userId: Types.ObjectId) {
+      return this.settingsService.softDelete(key, userId);
   }
 
 

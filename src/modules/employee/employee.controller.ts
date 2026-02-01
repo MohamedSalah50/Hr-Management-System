@@ -15,18 +15,19 @@ import { Types } from 'mongoose';
 import { auth } from 'src/common/decorators/auth.decorator';
 import { RoleEnum } from 'src/common';
 
-@auth([RoleEnum.admin, RoleEnum.superAdmin])
+@auth([RoleEnum.admin, RoleEnum.user])
 @Controller('employee')
 export class EmployeeController {
-  constructor(private readonly employeeService: EmployeeService) {}
+  constructor(private readonly employeeService: EmployeeService) { }
 
   @Post()
   create(@Body() createEmployeeDto: CreateEmployeeDto) {
     return this.employeeService.create(createEmployeeDto);
   }
 
-  @Get()
+  @Get(":userId")
   findAll(
+    @Param('userId') userId: Types.ObjectId,
     @Query('search') search?: string,
     @Query('departmentId') departmentId?: string,
   ) {
@@ -36,25 +37,26 @@ export class EmployeeController {
     if (departmentId) {
       return this.employeeService.getByDepartment(departmentId);
     }
-    return this.employeeService.findAll();
+    return this.employeeService.findAll(userId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.employeeService.findOne(id);
+  @Get(':id/:userId')
+  findOne(@Param('id') id: string, @Param('userId') userId: string) {
+    return this.employeeService.findOne(id, userId);
   }
 
-  @Patch(':id')
+  @Patch(':id/:userId')
   update(
+    @Param('userId') userId: Types.ObjectId,
     @Param('id') id: Types.ObjectId,
     @Body() updateEmployeeDto: UpdateEmployeeDto,
   ) {
-    return this.employeeService.update(id, updateEmployeeDto);
+    return this.employeeService.update(id, userId, updateEmployeeDto);
   }
 
-  @Patch(':id/soft-delete')
-  remove(@Param('id') id: string) {
-    return this.employeeService.softDelete(id);
+  @Patch(':id/soft-delete/:userId')
+  remove(@Param('id') id: string, @Param('userId') userId: Types.ObjectId) {
+    return this.employeeService.softDelete(id, userId);
   }
 
   @Patch(':id/toggle-status')

@@ -46,4 +46,8 @@ export class CreateAttendanceDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userId?: string;
 }

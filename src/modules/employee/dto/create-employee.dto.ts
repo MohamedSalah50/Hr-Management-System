@@ -9,7 +9,6 @@ import {
   Length,
   Matches,
   Min,
-  IsOptional,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { GenderEnum } from 'src/common';
@@ -37,14 +36,6 @@ export class CreateEmployeeDto {
 
   @IsDateString({}, { message: 'من فضلك ادخل تاريخ الميلاد الصحيح' })
   @IsNotEmpty({ message: 'هذا الحقل مطلوب' })
-  // @Transform(({ value }) => {
-  //   const date = new Date(value);
-  //   const age = new Date().getFullYear() - date.getFullYear();
-    // if (age < 20) {
-    //   throw new Error('يجب الا يقل عمر الموظف عن 20 سنة');
-    // }
-    // return value;
-  // })
   birthDate: string;
 
   @IsEnum(GenderEnum, { message: 'من فضلك اختر النوع' })
@@ -90,4 +81,8 @@ export class CreateEmployeeDto {
   @IsMongoId({ message: 'معرف القسم غير صالح' })
   @IsNotEmpty({ message: 'هذا الحقل مطلوب' })
   departmentId: string;
+
+  @IsMongoId({ message: 'معرف المستخدم غير صالح' })
+  @IsNotEmpty({ message: 'هذا الحقل مطلوب' })
+  userId: string;
 }

@@ -1,5 +1,5 @@
 // modules/salary-reports/dto/generate-report.dto.ts
-import { IsNumber, IsNotEmpty, Min, Max, IsMongoId } from 'class-validator';
+import { IsNumber, IsNotEmpty, Min, Max, IsMongoId, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class GenerateReportDto {

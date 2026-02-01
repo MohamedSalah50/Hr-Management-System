@@ -13,28 +13,29 @@ import { GenerateReportDto } from './dto/generate-report.dto';
 import { SearchReportDto } from './dto/search-report.dto';
 import { auth } from 'src/common/decorators/auth.decorator';
 import { RoleEnum } from 'src/common';
+import { Types } from 'mongoose';
 
-@auth([RoleEnum.admin, RoleEnum.superAdmin])
+@auth([RoleEnum.admin, RoleEnum.user])
 @Controller('salary-reports')
 export class SalaryReportController {
   constructor(private readonly salaryReportService: SalaryReportService) { }
 
-  @Post('generate')
-  generateReport(@Body() generateReportDto: GenerateReportDto) {
-    return this.salaryReportService.generateReport(generateReportDto);
+  @Post('generate/:userId')
+  generateReport(@Body() generateReportDto: GenerateReportDto, @Param('userId') userId: Types.ObjectId) {
+    return this.salaryReportService.generateReport(generateReportDto, userId);
   }
 
-  @Post('generate-all')
-  generateAll(@Body() body: { month: number; year: number }) {
-    return this.salaryReportService.generateReportsForAll(
-      body.month,
-      body.year,
-    );
-  }
+  // @Post('generate-all')
+  // generateAll(@Body() body: { month: number; year: number }) {
+  //   return this.salaryReportService.generateReportsForAll(
+  //     body.month,
+  //     body.year,
+  //   );
+  // }
 
-  @Get()
-  findAll() {
-    return this.salaryReportService.findAll();
+  @Get(":userId")
+  findAll(@Param('userId') userId: Types.ObjectId) {
+    return this.salaryReportService.findAll(userId);
   }
 
   @Post('search')
@@ -47,23 +48,23 @@ export class SalaryReportController {
     return this.salaryReportService.getSummary(parseInt(month), parseInt(year));
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.salaryReportService.findOne(id);
+  @Get(':id/:userId')
+  findOne(@Param('id') id: string, @Param('userId') userId: Types.ObjectId) {
+    return this.salaryReportService.findOne(id, userId);
   }
 
-  @Patch(':id/soft-delete')
-  remove(@Param('id') id: string) {
-    return this.salaryReportService.softDelete(id);
+  @Patch(':id/soft-delete/:userId')
+  remove(@Param('id') id: string, @Param('userId') userId: Types.ObjectId) {
+    return this.salaryReportService.softDelete(id, userId);
   }
 
-  @Get(':id/print')
-  getForPrint(@Param('id') id: string) {
-    return this.salaryReportService.getReportForPrint(id);
-  }
+  // @Get(':id/print')
+  // getForPrint(@Param('id') id: string) {
+  //   return this.salaryReportService.getReportForPrint(id);
+  // }
 
-  @Post('regenerate')
-  regenerate(@Body() generateReportDto: GenerateReportDto) {
-    return this.salaryReportService.regenerateReport(generateReportDto);
-  }
+  // @Post('regenerate')
+  // regenerate(@Body() generateReportDto: GenerateReportDto) {
+  //   return this.salaryReportService.regenerateReport(generateReportDto);
+  // }
 }
